@@ -1,0 +1,653 @@
+---
+title: "Partie 2 Construction du modèle hiérarchique bayésien "
+author: "NGUYEN Duc Hoang Viet"
+format:
+  html:
+    theme: cosmo        # Giao diện sạch sẽ, chuyên nghiệp
+    toc: true           # Hiện mục lục bên trái/phải
+    number-sections: true # Tự động đánh số 1, 2, 3...
+    code-fold: false     # Cho phép ẩn/hiện code (rất giống Notebook)
+    embed-resources: true # Để lưu thành 1
+execute:
+  warning: false
+  message: false
+---
+
+
+# Construction du modèle hiérarchique bayésien
+::: {#fig-model}
+![Structure du modèle hiérarchique bayésien](model1.png){width="90%" fig-align="center"}
+:::
+
+Variante : sigma\^2 suit une loi Exponentielle(1)
+
+Reparamétrisation : gamma = log(sigma\^2), Z_i = log(lambda_i)
+
+Il y a 5 fonction. Ce sont:
+
+-   fonction log_posterior : calculer la log posterior
+-   fonction les gradients : calculer les gradients de -log_postierior par les parametres Zi, mu, sigma
+-   fonction leapfrog. : calculer les steps pour algo HMC
+-   fonction HMC_step : algo HMC
+-   fonction run_chain : pour faire des chaines en même temps
+
+# Extraction des données
+
+```{r}
+# ------------------------------------------------------------------------------
+#                   CHARGEMENT ET PRÉ-TRAITEMENT DES DONNÉES
+# ------------------------------------------------------------------------------
+library(rgbif)
+library(dplyr)
+library(sf)
+library(maps)
+
+tigre_moustique_data <- occ_search(
+  scientificName = "Aedes albopictus",
+  country = "FR",
+  limit = 2210,
+)$data
+
+# ------------------------------------------------------------------------------
+#                   RESUME DES DONNÉES
+summary_table <- tigre_moustique_data %>%
+  filter(!is.na(year), !is.na(stateProvince)) %>%  
+  group_by(year, stateProvince) %>%                 
+  summarise(n_occurrences = n(), .groups = "drop") 
+
+df <- summary_table
+df$i <- as.integer(factor(df$year))
+df$j <- as.integer(factor(df$stateProvince))
+df[, c("year", "stateProvince", "i", "j")]
+
+```
+
+```{r}
+# ------------------------------------------------------------------------------
+#                   CHARGEMENT ET PRÉ-TRAITEMENT DES DONNÉES
+# ------------------------------------------------------------------------------
+# Calcul des agrégats annuels (données synthétiques par année)
+df_annual <- summary_table %>%
+  group_by(year) %>%
+  summarise(
+    Y_sum = sum(n_occurrences),          # Nombre total de moustiques capturés par an
+    J_counts = n_distinct(stateProvince) # Nombre de provinces ayant rapporté des données
+  ) %>%
+  arrange(year)
+
+# Extraction sous forme de vecteurs pour le modèle
+Y <- df_annual$Y_sum
+J <- df_annual$J_counts
+I <- nrow(df_annual) # Nombre total d'années d'observation (généralement 12)
+```
+
+# La fonction de log-posteriori
+
+```{r}
+# ------------------------------------------------------------------------------
+#                 La fonction log-postérieure 
+# ------------------------------------------------------------------------------
+log_posterior <- function(Z, Y, J, mu, gamma) { 
+  sigma2 <- exp(gamma)
+  
+  # Terme 1: Vraisemblance de Poisson
+  log_vrais <- sum(Y * Z - J * exp(Z))
+  
+  # Terme 2: Loi a priori conditionnelle des Zi (Loi Normale)
+  log_prior_Z <- sum(dnorm(Z, mean = mu, sd = sqrt(sigma2), log = TRUE))
+  
+  # Terme 3: Loi a priori de μ, σ2
+  log_prior_mu <- dnorm(mu, mean = 0, sd = 2, log = TRUE)
+  log_prior_sigma2 <- dexp(sigma2, rate = 1, log = TRUE) + gamma 
+  
+  res <- log_vrais + log_prior_Z + log_prior_mu + log_prior_sigma2
+  
+  if (is.na(res) || is.infinite(res)) return(-1e20) 
+  return(res)
+}
+```
+
+# Les fonctions de gradients
+
+```{r}
+# ------------------------------------------------------------------------------
+#       Gradient de l'Énergie Potentielle U(theta) = -log_posterior
+# ------------------------------------------------------------------------------
+# Calcul du gradient de l'énergie (nabla U) pour l'algorithme HMC.
+# Rappel : U = -log(pi(theta|y)), nous implémentons ici les dérivées 
+# partielles analytiques obtenues précédemment.
+# ------------------------------------------------------------------------------
+
+# Derivees partielles par rapport aux Zi (Vectorise)
+grad_Z <- function(Z, Y, J, mu, gamma) {
+  sigma2 <- exp(gamma)
+  return(J * exp(Z) - Y + (Z - mu) / sigma2)
+}
+
+# # Derivee partielle par rapport à mu
+grad_mu <- function(Z, mu, gamma) {
+  sigma2 <- exp(gamma)
+  return(sum(mu - Z) / sigma2 + mu / 4)
+}
+
+# Dérivée partielle par rapport à gamma (log-variance)
+# Inclut la correction du Jacobien pour la reparamétrisation
+grad_gamma <- function(Z, mu, gamma) {
+  sigma2 <- exp(gamma)
+  I <- length(Z)
+  return(-sum((Z - mu)^2) / (2 * sigma2) + I / 2 + exp(gamma) - 1)
+}
+```
+
+# Algorithme Hamiltonian Monte Carlo avec méthode de leapfrog
+
+```{r}
+# ------------------------------------------------------------------------------
+#                 MOTEUR PHYSIQUE : HAMILTONIAN MONTE CARLO
+# ------------------------------------------------------------------------------
+#                          1. Algorithme Leapfrog
+# Cette fonction simule la trajectoire hamiltonienne en mettant à jour
+# alternativement les positions et les impulsions.
+# ------------------------------------------------------------------------------
+
+leapfrog <- function(Z, mu, gamma, P_Z, P_mu, P_gamma, Y, J, eps, L, f_grad_Z, f_grad_mu, f_grad_gamma) {
+  
+  # Premier demi-pas pour les impulsions (Momentum half-step)
+  P_Z     <- P_Z     - 0.5 * eps * f_grad_Z(Z, Y, J, mu, gamma)
+  P_mu    <- P_mu    - 0.5 * eps * f_grad_mu(Z, mu, gamma)
+  P_gamma <- P_gamma - 0.5 * eps * f_grad_gamma(Z, mu, gamma)
+  
+  for (l in 1:L) {
+    # Mise à jour des positions (Position update)
+    Z     <- Z     + eps * P_Z
+    mu    <- mu    + eps * P_mu
+    gamma <- gamma + eps * P_gamma
+    
+    if (l < L) {
+      # Mise à jour complète des impulsions (sauf pour le dernier pas)
+      P_Z     <- P_Z     - eps * f_grad_Z(Z, Y, J, mu, gamma)
+      P_mu    <- P_mu    - eps * f_grad_mu(Z, mu, gamma)
+      P_gamma <- P_gamma - eps * f_grad_gamma(Z, mu, gamma)
+    }
+  }
+  
+  # Dernier demi-pas pour les impulsions (Final momentum half-step)
+  P_Z     <- P_Z     - 0.5 * eps * f_grad_Z(Z, Y, J, mu, gamma)
+  P_mu    <- P_mu    - 0.5 * eps * f_grad_mu(Z, mu, gamma)
+  P_gamma <- P_gamma - 0.5 * eps * f_grad_gamma(Z, mu, gamma)
+  
+  return(list(Z = Z, mu = mu, gamma = gamma, P_Z = P_Z, P_mu = P_mu, P_gamma = P_gamma))
+}
+```
+
+```{r}
+# ------------------------------------------------------------------------------
+#              Fonction principal Hamiltonian Monte Carlo 
+# ------------------------------------------------------------------------------
+HMC_step_MC <- function(Z, mu, gamma, Y, J, eps, L, lp_func, f_grad_Z, f_grad_mu, f_grad_gamma) {
+  
+  # 1. Initialisation des impulsions aleatoire
+  P_Z_init  <- rnorm(length(Z))
+  P_mu_init <- rnorm(1)
+  P_gamma_init <- rnorm(1)
+  
+  # 2. Calcul de l'énergie initiale (Hamiltonien initial)
+  init_U <- -lp_func(Z, Y, J, mu, gamma)
+  init_K <- sum(P_Z_init^2)/2 + P_mu_init^2/2 + P_gamma_init^2/2
+  
+  # 3. Simulation de la trajectoire avec l'intégrateur Leapfrog
+  res <- leapfrog(Z, mu, gamma, P_Z_init, P_mu_init, P_gamma_init, Y, J, eps, L, f_grad_Z, f_grad_mu, f_grad_gamma)
+  
+  # 4. Calcul de l'énergie finale (Hamiltonien final)
+  final_U <- -lp_func(res$Z, Y, J, res$mu, res$gamma)
+  final_K <- sum(res$P_Z^2)/2 + sum(res$P_mu^2)/2 + sum(res$P_gamma^2)/2
+  
+  # 5. Étape d'acceptation de Metropolis-Hastings
+  if (log(runif(1)) < (init_U + init_K - final_U - final_K)) {
+    return(list(Z = res$Z, mu = res$mu, gamma = res$gamma, accepted = TRUE))
+  } else {
+    return(list(Z = Z, mu = mu, gamma = gamma, accepted = FALSE))
+  }
+}
+```
+
+```{r}
+# ------------------------------------------------------------------------------
+# Fonction pour exécuter une chaîne MCMC (Hamiltonian Monte Carlo)
+# ------------------------------------------------------------------------------
+run_chain <- function(id, n_iter, Y, J, eps, L) {
+  cat(sprintf("Exécution de la Chaîne %d...\n", id))
+  
+  # 1. Initialisation des paramètres (Valeurs de départ)
+  # On utilise les données observées pour un démarrage proche de la zone cible
+  curr_Z      <- log((Y / J) + 0.1)  
+  curr_mu     <- mean(curr_Z)            
+  curr_gamma  <- log(var(curr_Z) + 0.01) # Initialisation de la log-variance
+  
+  # 2. Préparation des structures de stockage (Traces)
+  mu_trace    <- numeric(n_iter)
+  sigma_trace <- numeric(n_iter)
+  Z_trace     <- matrix(0, n_iter, length(Y)) # Stockage pour les 12 années
+  lp_trace    <- numeric(n_iter)              # Évolution du log-posterior
+  
+  # Compteur pour le taux d'acceptation
+  accepted_count <- 0
+  
+  # 3. Boucle principale d'échantillonnage
+  for (k in 1:n_iter) {
+    # Appel de l'étape HMC pour mettre à jour l'état de la chaîne
+    res <- HMC_step_MC(curr_Z, curr_mu, curr_gamma, Y, J, eps, L, 
+                       lp_func = log_posterior, 
+                       f_grad_Z = grad_Z, 
+                       f_grad_mu = grad_mu, 
+                       f_grad_gamma = grad_gamma)
+    
+    # Mise à jour des valeurs actuelles (Acceptées ou Rejetées)
+    curr_Z     <- res$Z
+    curr_mu    <- res$mu
+    curr_gamma <- res$gamma
+    
+    if (res$accepted) {
+      accepted_count <- accepted_count + 1
+    }
+    
+    # 4. Stockage des échantillons et transformation de gamma en sigma
+    mu_trace[k]    <- curr_mu
+    sigma_trace[k] <- sqrt(exp(curr_gamma)) # Retour à l'écart-type original
+    Z_trace[k, ]   <- curr_Z
+    
+    # Calcul de la densité log-posterior pour le suivi de la convergence
+    lp_trace[k]    <- log_posterior(curr_Z, Y, J, curr_mu, curr_gamma)  
+    
+    # 5. Affichage de la progression
+    if (k %% (n_iter / 4) == 0) {
+      current_acc_rate <- (accepted_count / k) * 100
+      cat(sprintf("  Chaîne %d | Progression : %d / %d (%d%%) | Taux d'acc. : %.1f%%\n", 
+                  id, k, n_iter, round(k/n_iter*100), current_acc_rate))
+    }
+  }
+  
+  # Retourne les résultats sous forme de liste
+  final_acc_rate <- (accepted_count / n_iter) 
+  cat(sprintf("=> Chaîne %d terminée avec succès. Taux d'acceptation final : %.2f%%\n", id, final_acc_rate* 100))
+  
+  return(list(mu = mu_trace, sigma = sigma_trace, Z = Z_trace, lp = lp_trace, acc_rate = final_acc_rate))
+  #return(list(mu = mu_trace, sigma = sigma_trace, Z = Z_trace, lp = lp_trace))
+}
+```
+
+# DIAGNOSTICS DE CONVERGENCE ET PERFORMANCES
+
+```{r}
+# ------------------------------------------------------------------------------
+#   Main de lancement de la Simulation MCMC (Multi-chaînes)
+# ------------------------------------------------------------------------------
+
+# Configuration des hyperparamètres de l'algorithme HMC
+n_chains <- 5          # Nombre de chaînes indépendantes pour tester la convergence
+n_iter   <- 100000       # Nombre total d'itérations par chaîne
+eps      <- 0.02       # Taille du pas (Step size) - à ajuster selon l'acceptation
+L        <- 100        # Nombre de pas Leapfrog par itération
+
+# Initialisation de la liste pour stocker les résultats de chaque chaîne
+all_results <- list()
+
+# Exécution des chaînes en boucle
+set.seed(123) 
+for (i in 1:n_chains) {
+  start_time <- Sys.time() # Chronométrage pour estimer le temps total
+  
+  all_results[[i]] <- run_chain(i, n_iter, Y, J, eps, L)
+  
+  end_time <- Sys.time()
+  cat(sprintf("Chaîne %d terminée en %.2f minutes.\n", i, as.numeric(end_time - start_time, units="mins")))
+}
+
+```
+
+```{r}
+library(ggplot2)
+library(tidyr)
+library(dplyr)
+
+# 1. Préparation des données pour ggplot2
+# Extraction de la log-postériore pour toutes les chaînes de simulation
+lp_data <- data.frame(
+  Iteration = 1:n_iter,
+  Chaine_1  = all_results[[1]]$lp,
+  Chaine_2  = all_results[[2]]$lp,
+  Chaine_3  = all_results[[3]]$lp,
+  Chaine_4  = all_results[[4]]$lp,
+  Chaine_5  = all_results[[5]]$lp
+)
+
+# Transformation des données du format large au format long pour ggplot2
+lp_long <- lp_data %>%
+  pivot_longer(cols = starts_with("Chaine"), 
+               names_to = "Chaine", 
+               values_to = "Log_Posterior")
+
+
+# 2. Visualisation avec ggplot2
+ggplot(lp_long, aes(x = Iteration, y = Log_Posterior, color = Chaine)) +
+  geom_line(alpha = 0.8) +
+  theme_minimal() +
+  
+  # Utilisation de scale_color_manual pour définir manuellement les couleurs
+  scale_color_manual(
+    values = c(
+      "Chaine_1" = "red", "Chaine_2" = "blue",      
+      "Chaine_3" = "darkgreen", "Chaine_4" = "orange",  "Chaine_5" = "purple" ),
+    labels = paste("Chaîne", 1:5) # Mise à jour des noms affichés dans la légende
+  ) +
+  
+  # Configuration des étiquettes et du titre du graphique
+  labs(
+    title = "Évolution de la Log-Posteriori (Diagnostics HMC)",
+    subtitle = "Comparaison de la convergence des 5 chaînes MCMC",
+    x = "Itérations",y = "Log-Posterior",color = "Légende"
+  ) +
+  
+  # Personnalisation esthétique du thème
+  theme(
+    legend.position = "right",
+    plot.title = element_text(face = "bold", size = 14),
+    panel.grid.minor = element_blank()
+  )
+```
+
+```{r}
+# ---------------------------------------------------------
+#                   Main run 1 chain 
+# ---------------------------------------------------------
+n_chains <- 1
+n_iter   <- 5000
+eps      <- 0.02
+L        <- 100
+
+all_results <- list()
+
+for (i in 1:n_chains) {
+  start_time <- Sys.time()
+  all_results[[i]] <- run_chain(i, n_iter, Y, J, eps, L)
+  end_time <- Sys.time()
+  cat(sprintf("Chaîne %d terminée en %.2f minutes.\n", i, as.numeric(end_time - start_time, units="mins")))
+}
+```
+
+```{r}
+par(mfrow=c(2,2))
+
+# Diagnostic de la Chaîne 1 : Analyse du Burn-in et de l'Autocorrélation
+chaine <- all_results[[1]]$lp
+chaine_after_burnin <- all_results[[1]]$lp[1001:5000]
+
+# 1. Tracé de la trajectoire (Traceplot) de la Log-Posterior
+plot(chaine, type="l", col="red", 
+     main="Log-Posterior: Full vs Post-Burn-in", 
+     xlab="Iteration", ylab="Log-Probability")
+
+lines(1001:5000, chaine_after_burnin, col="darkorange", lwd=1.5)
+
+# 2. Histogramme de la distribution de la Log-Posterior
+hist(chaine,col="darkblue")
+
+# 3. Analyse de l'autocorrélation avant Burn-in
+acf(chaine, main="Avant Burn-In (Chain 1)")
+
+# 4. Analyse de l'autocorrélation après Burn-in
+acf(chaine_after_burnin, main="Apres Burn-In (Chain 1)")
+```
+
+```{r}
+# Plots
+par(mfrow=c(2,2))
+
+# Visualisation des paramètres globaux (Mu et Sigma) - Chaîne 1
+
+# --- ANALYSE DE MU (Moyenne globale des log-intensités) ---
+mu_trace <- all_results[[1]]$mu
+plot(mu_trace, type="l" ,col="darkcyan", main="Traceplot mu")
+hist(mu_trace, col="darkcyan",main="Posterior mu")
+
+# --- ANALYSE DE SIGMA (Écart-type de la variabilité interannuelle) ---
+sigma_trace <- all_results[[1]]$sigma
+plot(sigma_trace, type="l",col="darkblue", main="Traceplot sigma")
+hist(sigma_trace,col="darkblue", main="Posterior sigma")
+
+```
+
+```{r}
+# Visualisation des paramètres latents Zi
+par(mfrow=c(1,2))
+
+# Récupération de la trace des paramètres Z pour la première chaîne
+Z_trace <- all_results[[1]]$Z
+
+# 1. Nuage de points (Scatter plot) de tous les Z cumulés
+plot(Z_trace, type="p",col="darkorange", main="Traceplot Z")
+
+# 2. Histogramme global de la distribution des Z
+hist(Z_trace,col = "darkorange", main="Posterior Z")
+
+```
+
+```{r}
+# Transformation des paramètres et construction de la matrice finale
+# ------------------------------------------------------------------------------
+
+# Conversion des log-intensités (Z) en intensités réelles (Lambda)
+# On applique la fonction exponentielle pour revenir à l'échelle naturelle
+Z_samples <- Z_trace
+λ_samples <- exp(Z_samples)
+
+# Regroupement des Lambda (12 colonnes), de Mu et de Sigma
+samples_matrix <- cbind(λ_samples, mu_trace, sigma_trace )
+n_l <- ncol(λ_samples)
+colnames(samples_matrix) <- c(paste0("λ", 1:n_l), "μ", "σ^2")
+
+head(round(samples_matrix,5))
+```
+
+```{r}
+# Visualisation des distributions postérieures pour chaque Lambda (Années 1-12)
+# ------------------------------------------------------------------------------
+par(mfrow=c(3, 4), mar=c(4, 4, 2, 1)) 
+
+# 1. Détermination du nombre de paramètres lambda
+n_lambda <- ncol(λ_samples) 
+
+# 2. Boucle pour générer les histogrammes (après exclusion de la période de burn-in)
+burn_in <- 1001
+for (i in 1:n_lambda) {
+  hist(λ_samples[burn_in:n_iter, i], 
+       breaks = 30, 
+       col = "skyblue", 
+       border = "white",
+       main = paste("Posterior", colnames(samples_matrix)[i]),
+       xlab = expression(lambda),
+       ylab = "Nombre")
+  
+ # Ajout d'une ligne verticale pour représenter la moyenne (Mean)
+  abline(v = mean(λ_samples[burn_in:n_iter, i]), col = "red", lwd = 2)
+}
+
+# Réinitialisation de la disposition graphique par défaut (1x1)
+par(mfrow=c(1, 1))
+```
+
+# Estimateurs ponctuels et des intervalles de confiances pour chaque parametre
+
+```{r}
+# Eliminer 1000 premiere ligne 
+clean_samples <- samples_matrix[1001:5000, ]
+
+# 1.Posterior Mean)
+post_mean <- colMeans(clean_samples)
+
+# 2. Interval de confiances 95% (95% Credible Interval)
+post_ci <- apply(clean_samples, 2, quantile, probs = c(0.025, 0.975))
+
+# 3. Met dans un tableau 
+results <- data.frame(
+  Parameter = colnames(clean_samples),
+  Estimate = post_mean,
+  CI_lower = post_ci[1, ],
+  CI_upper = post_ci[2, ]
+)
+
+print(results)
+```
+
+```{r}
+library(ggplot2)
+
+# ------------------------------------------------------------------------------
+# 7. Création du Forest Plot (Adapté à vos noms de colonnes)
+# ------------------------------------------------------------------------------
+
+# 1. Préparation de l'ordre des paramètres
+# On utilise 'Parameter' car c'est le nom dans votre tableau results
+results$Parameter <- factor(results$Parameter, levels = rev(results$Parameter))
+
+# 2. Génération du graphique Forest Plot
+ggplot(results, aes(x = Parameter, y = Estimate)) +
+  
+  # Barres d'erreur (on utilise CI_lower et CI_upper de votre tableau)
+  geom_errorbar(aes(ymin = CI_lower, ymax = CI_upper), 
+                width = 0.2, 
+                color = "#E44A33", # Le rouge de l'image
+                size = 0.8) + 
+  
+  # Points de la moyenne (on utilise Estimate de votre tableau)
+  geom_point(size = 3, color = "#2C3E50") + 
+  
+  # Inversion des axes pour l'effet horizontal
+  coord_flip() + 
+  
+  # Style visuel
+  theme_light() +
+  
+  # Titres en français
+  labs(
+    title = "Variabilité Inter-Annuelle des Occurrences (Paramètres λ)",
+    subtitle = "Moyenne a posteriori et Intervalles de crédibilité à 95%",
+    x = "Effet aléatoire (Année)",
+    y = "Nombre moyen d'occurrences estimé (λ)"
+  ) +
+  
+  # Esthétique du texte
+  theme(
+    plot.title = element_text(face = "bold", size = 14, hjust = 0),
+    plot.subtitle = element_text(size = 11, color = "grey30"),
+    panel.grid.minor = element_blank(),
+    axis.text.y = element_text(size = 10, face = "italic"),
+    axis.title = element_text(size = 12)
+  )
+```
+
+# Analyser la qualité prédictive du modèle.
+
+```{r}
+# Création de y_list : chaque élément de la liste est un vecteur contenant 
+# le nombre d'occurrences (moustiques) par province pour chaque année.
+y_list <- split(df$n_occurrences, df$i)
+
+# Extraction des résultats de la Chaîne 1 (MCMC)
+res_chain1 <- all_results[[1]]
+
+# Élimination de la période de chauffe (burn-in, ex: 1000 premières itérations)
+burn_in <- 1001
+n_iter_total <- length(res_chain1$mu)
+indices_kept <- burn_in:n_iter_total
+
+# Création d'un dataframe contenant les valeurs de lambda_i (exp(Z_i))
+# On transforme les échantillons de Z (espace log) en intensité réelle (lambda)
+lambda_samples <- exp(res_chain1$Z[indices_kept, ])
+colnames(lambda_samples) <- paste0("lambda_", 1:ncol(lambda_samples))
+
+# Conversion en structure dataframe pour faciliter les analyses PPC suivantes
+samples_df <- as.data.frame(lambda_samples)
+```
+
+```{r}
+library(ggplot2)
+
+# --- 1. Préparation des données observées (Réalité) ---
+y_obs <- unlist(y_list) # Liste des occurrences observées par an
+stat_obs_zero <- mean(y_obs == 0) # Proportion réelle de zéros
+stat_obs_max  <- max(y_obs)       # Valeur maximale réelle observée
+
+# --- 2. Configuration de la simulation ---
+n_samples_ppc <- 1000 
+set.seed(42) # Pour la reproductibilité
+indices_ppc <- sample(1:nrow(samples_df), n_samples_ppc)
+
+rep_stat_zero <- numeric(n_samples_ppc)
+rep_stat_max  <- numeric(n_samples_ppc)
+
+I <- length(y_list) # Nombre d'années (12)
+J_list <- sapply(y_list, length) # Nombre de sites par année
+
+cat("Génération des données prédictives a posteriori en cours...\n")
+
+# --- 3. Boucle de simulation des données répliquées (y_rep) ---
+for (t in 1:n_samples_ppc) {
+    idx <- indices_ppc[t]
+    y_rep_t <- numeric(0)
+    
+    for (i in 1:I) {
+        # Extraction du lambda pour l'année i à l'itération t
+        lambda_i_t <- samples_df[idx, paste0("lambda_", i)]
+        
+        # Simulation de nouvelles observations selon la loi de Poisson
+        # J_list[i] représente l'effort d'échantillonnage de l'année i
+        y_rep_t <- c(y_rep_t, rpois(J_list[i], lambda = lambda_i_t))
+    }
+    
+    # Calcul des statistiques sur les données simulées
+    rep_stat_zero[t] <- mean(y_rep_t == 0)
+    rep_stat_max[t]  <- max(y_rep_t)
+}
+
+# --- 4. Calcul des P-values bayésiennes ---
+# Si la p-value est proche de 0.5, le modèle est bien ajusté.
+p_val_zero <- mean(rep_stat_zero >= stat_obs_zero)
+p_val_max  <- mean(rep_stat_max >= stat_obs_max)
+
+cat(sprintf("P-value bayésienne (Proportion de zéros) : %.3f\n", p_val_zero))
+cat(sprintf("P-value bayésienne (Maximum observé) : %.3f\n", p_val_max))
+
+# --- 5. Visualisation graphique ---
+ppc_long <- data.frame(
+    Valeur = c(rep_stat_zero, rep_stat_max),
+    Statistique = rep(c("1. Proportion de sites sans moustiques (Zéro)", 
+                        "2. Pire Invasion (Maximum observé)"), 
+                      each = n_samples_ppc)
+)
+
+obs_lines <- data.frame(
+    Valeur_obs = c(stat_obs_zero, stat_obs_max),
+    Statistique = c("1. Proportion de sites sans moustiques (Zéro)", 
+                    "2. Pire Invasion (Maximum observé)")
+)
+
+ppc_plot <- ggplot(ppc_long, aes(x = Valeur)) +
+    geom_histogram(fill = "#95A5A6", color = "white", bins = 30, alpha = 0.8) +
+    geom_vline(data = obs_lines, aes(xintercept = Valeur_obs), 
+               color = "#E74C3C", linewidth = 1.2, linetype = "dashed") +
+    facet_wrap(~ Statistique, scales = "free") +
+    theme_minimal() +
+    labs(
+        title = "Vérification Prédictive a Posteriori (PPC)",
+        subtitle = "L'histogramme gris représente les prédictions du modèle. La ligne rouge est la réalité observée.",
+        x = "Valeur de la statistique",
+        y = "Fréquence"
+    ) +
+    theme(
+        strip.background = element_rect(fill = "#EFEFEF", color = NA),
+        strip.text = element_text(face = "bold", size = 10)
+    )
+
+print(ppc_plot)
+```

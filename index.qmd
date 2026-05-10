@@ -1,0 +1,21 @@
+---
+title: "Bienvenue sur le projet Modèle hiérarchique bayésien pour l’écologie"
+author: "NGUYEN Duc Hoang Viet"
+---
+
+# Présentation du projet
+On s’intéresse dans ce projet à la modélisation de la présence du moustique tigre (*Aedes albopictus*) en France
+métropolitaine. 
+
+Pour cela, on dispose de données d’occurences du moustique tigre, que l’on peut trouver
+par exemple sur le site de GBIF (Global Biodiversity Information Facility, https://www.gbif.org/).
+
+Le but est d’analyser la variabilité inter-site et intra-site des occurrences, en utilisant un modèle hiérarchique bayésien.
+
+Le projet est divisé en plusieurs parties :
+
+- **Partie 1 :** Extraction des données et pré-traitement
+
+- **Partie 2 :** Construction du modèle hiérarchique bayésien. 
+
+- **Partie 3 :** Modele extension.

@@ -1,0 +1,160 @@
+---
+title: "Partie 1 Extraction des données et pré-traitement"
+author: "NGUYEN Duc Hoang Viet"
+format:
+  html:
+    theme: cosmo        # Giao diện sạch sẽ, chuyên nghiệp
+    toc: true           # Hiện mục lục bên trái/phải
+    number-sections: true # Tự động đánh số 1, 2, 3...
+    code-fold: false     # Cho phép ẩn/hiện code (rất giống Notebook)
+    embed-resources: true # Để lưu thành 1
+execute:
+  warning: false
+  message: false
+---
+
+# Extraction des données
+
+```{r}
+# ------------------------------------------------------------------------------
+#                   CHARGEMENT ET PRÉ-TRAITEMENT DES DONNÉES
+# ------------------------------------------------------------------------------
+library(rgbif)
+library(dplyr)
+library(sf)
+library(maps)
+
+tigre_moustique_data <- occ_search(
+  scientificName = "Aedes albopictus",
+  country = "FR",
+  limit = 2210,
+)$data
+
+dim(tigre_moustique_data)
+```
+
+```{r}
+head(tigre_moustique_data)
+```
+
+# RESUME DES DONNÉES
+
+```{r}
+# ------------------------------------------------------------------------------
+#                   RESUME DES DONNÉES
+# ------------------------------------------------------------------------------
+summary_table <- tigre_moustique_data %>%
+  filter(!is.na(year), !is.na(stateProvince)) %>%  
+  group_by(year, stateProvince) %>%                 
+  summarise(n_occurrences = n(), .groups = "drop") 
+
+nrow(summary_table)
+```
+
+
+```{r}
+library(DT)
+datatable(summary_table)
+```
+
+# VISUALISATIONS DES DONNEES 
+
+```{r}
+# ------------------------------------------------------------------------------
+#                  VISUALISATIONS DES DONNEES 
+# ------------------------------------------------------------------------------
+library(sf)
+library(ggplot2)
+library(maps)
+
+
+# enlever les lignes qui n'ont pas de coordonne 
+
+options(repr.plot.width = 20, repr.plot.height = 12)
+spatial_data <- tigre_moustique_data %>%
+  filter(!is.na(decimalLatitude), !is.na(decimalLongitude))
+spatial_sf <- st_as_sf(
+  spatial_data,
+  coords = c("decimalLongitude", "decimalLatitude"),
+  crs = 4326   # CRS WGS84
+)
+
+france_map <- map_data("france")
+
+ggplot() +
+  geom_polygon(
+    data = france_map,
+    aes(x = long, y = lat, group = group),
+    fill = "gray90", color = "black"
+  ) +
+  geom_sf(
+    data = spatial_sf,
+    color = "red",
+    size = 2,
+    alpha = 0.6
+  ) +
+  theme_minimal() +
+  labs(
+    title = "Des observations d'Aedes albopictus en France",
+    x = "Longitude",
+    y = "Latitude"
+  )
+```
+
+## Par année
+
+```{r}
+# Par année
+options(repr.plot.width = 20, repr.plot.height = 12)
+ggplot() +
+  geom_polygon(
+    data = france_map,
+    aes(x = long, y = lat, group = group),
+    fill = "gray90", color = "black"
+  ) +
+  geom_sf(
+    data = spatial_sf,
+    aes(color = factor(year)),
+    size = 2,
+    alpha = 0.6
+  ) +
+  theme_minimal() +
+  labs(
+    title = "Des observations d'Aedes albopictus par année",
+    color = "Année",
+    x = "Longitude",
+    y = "Latitude"
+  )
+```
+
+##  Par site 
+```{r}
+# Par site 
+df <- summary_table
+
+library(tidyverse)
+library(giscoR)
+
+options(repr.plot.width = 20, repr.plot.height = 12)
+# 1.Resume les donnes
+occurrence_counts <- df %>%
+  group_by(stateProvince) %>%
+  summarise(n = sum(n_occurrences, na.rm = TRUE))
+
+# 2. Prend la carte
+france_map <- gisco_get_nuts(country = "FR",nuts_level = 2, resolution = "20")
+
+# 3. Ajouter les donnes
+map_data <- france_map %>%
+  left_join(occurrence_counts, by = c("NAME_LATN" = "stateProvince"))
+
+# 4. Plot
+ggplot(data = map_data) +
+  geom_sf(aes(fill = n)) +
+  geom_sf_text(aes(label = NAME_LATN),size = 2.5,color = "black",check_overlap = TRUE,fontface = "bold") +
+  scale_fill_viridis_c(option = "plasma",na.value = "grey90",name = "Occurrences") +
+  theme_minimal() +
+  labs(title = "Occurrences by Province in France",
+    x = "Longitude", y = "Latitude") +
+  coord_sf(xlim = c(-5.5, 10), ylim = c(41, 51.5))
+```

@@ -1,0 +1,25 @@
+project:
+  type: website
+  output-dir: docs  # pour Github pages
+
+website:
+  title: "Projet Model bayesien pour l'écologie"
+  navbar:
+    background: primary
+    left:
+      - href: index.qmd
+        text: Accueil
+      - href: Part1.qmd
+        text: "Extraction des données "
+      - href: Part2.qmd
+        text: "Modèle hiérarchique bayésien"
+      - href: Part3.qmd
+        text: "Modèle Extension "
+      
+
+format:
+  html:
+    theme: cosmo
+    toc: true
+    code-fold: true
+    embed-resources: false 
