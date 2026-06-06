@@ -3,23 +3,43 @@ project:
   output-dir: docs  # pour Github pages
 
 website:
-  title: "Projet Model bayesien pour l'écologie"
+  title: "Projet Model hiérarchique bayesien pour l'écologie"
   navbar:
-    background: primary
+    background: "#1a365d"
     left:
       - href: index.qmd
         text: Accueil
       - href: Part1.qmd
         text: "Extraction des données "
-      - href: Part2.qmd
-        text: "Modèle hiérarchique bayésien"
+      - href: Part2_1.qmd
+        text: "Modèle version 1"
+      - href: Part2_2.qmd
+        text: "Modèle version 2"
       - href: Part3.qmd
         text: "Modèle Extension "
+        
+    right:
+      - icon: github
+        href: https://github.com/Hoangviet1810/Projet-Modele-bayesien-pour-ecologie
+      - text: "Portfolio de Viet"
+        href: https://ndhviet.wixsite.com/hviet-portfolio
+        aria-label: "Portfolio"
+      - icon: linkedin           
+        href: https://www.linkedin.com/in/hoang-viet1810/?isSelfProfile=false
+        aria-label: "LinkedIn"
       
 
 format:
   html:
-    theme: cosmo
+    theme: flatly
+    css: custom.css
+    include-after-body: [loading.html, footer.html]
     toc: true
+    toc-location: right
+    toc-title: "Sur cette page" 
     code-fold: true
-    embed-resources: false 
+    embed-resources: false
+    #include-after-body: footer.html
+    
+    
+    

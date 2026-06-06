@@ -1,41 +1,41 @@
 ---
-title: "Partie 3 Modele Extension"
+title: "Partie 3 : Modèle Extension"
 author: "NGUYEN Duc Hoang Viet"
-format:
-  html:
-    theme: cosmo        # Giao diện sạch sẽ, chuyên nghiệp
-    toc: true           # Hiện mục lục bên trái/phải
-    number-sections: true # Tự động đánh số 1, 2, 3...
-    code-fold: false     # Cho phép ẩn/hiện code (rất giống Notebook)
-    embed-resources: true # Để lưu thành 1
+number-sections: true
+code-fold: false
 execute:
   warning: false
-  message: false
+  message: true
 ---
 
+# Modele Extension
 
-# Partie Modele Extension 
+On pourra considérer l'extension suivante pour expliquer une partie de la variabilité entre années :
 
-::: {#fig-model}
-![Structure du modèle extension](model2.png){width="90%" fig-align="center"}
-:::
+$$
+\begin{aligned}
+y_{ij} \mid \lambda_{ij} &\sim \text{Poisson}(\lambda_{ij}) \\
+\log \lambda_{ij} &= \alpha_j + \beta x_{ij} \\
+\alpha_j \mid \mu, \sigma^2 &\sim \mathcal{N}(\mu, \sigma^2)
+\end{aligned}
+$$
 
-Variante : sigma^2 suit une loi Exponentielle(1), mu suit loi Gaussien(0,4), Belta suit loi Gaussien(0,10).
+où $x_{ij}$ est une covariable environnementale et $\beta$ un paramètre supplémentaire à estimer.
 
-Reparamétrisation : gamma = log(sigma^2), Z_i = log(lambda_i)
+Hyperparamètres : $\sigma^2 \sim \text{Exp}(1)$, $\mu \sim \mathcal{N}(0,4)$, $\beta \sim \mathcal{N}(0,10)$
 
-Il y a 5 fonction. Ce sont: 
+Reparamétrisation : $\gamma = \log(\sigma^2)$, $Z_i = \log(\lambda_i)$
 
-- fonction log_posterior_ext : calculer la log posterior
-- fonction les gradients : calculer les gradients de -log_postierior par les parametres Zi, mu, sigma, Belta
-- fonction leapfrog_ext  : calculer les steps pour algo HMC
-- fonction HMC_step_ext  : algo HMC
-- fonction run_chain_ext : pour faire des chaines en même temps
-- fonction get_temp_site  : Récupérer et calculer les températures moyennes annuelles.
+Il y a 5 fonction. Ce sont:
+
+-   fonction log_posterior_ext : calculer la log posterior
+-   fonction les gradients : calculer les gradients de -log_postierior par les parametres $Z_i$, $\mu$, $\gamma$
+-   fonction leapfrog_ext : calculer les steps pour algo HMC
+-   fonction HMC_step_ext : algo HMC
+-   fonction run_chain_ext : pour faire des chaines en même temps
+-   fonction get_temp_site : Récupérer et calculer les températures moyennes annuelles
 
 Dans cette partie, nous avons exploité les coordonnées des sites afin de récupérer các données de température via la NASA en utilisant le package "nasapower". Malheureusement, ce package ne fournit plus các températures annuelles directes, mais seulement các données mensuelles. Par conséquent, nous các avons récupérées và calculé "à la main" các moyennes annuelles.(T2M)
-
-
 
 ```{r}
 # ------------------------------------------------------------------------------
@@ -112,7 +112,6 @@ get_temp_site <- function(lon, lat) {
 }
 ```
 
-
 ```{r}
 library(nasapower)
 library(sf)
@@ -123,8 +122,10 @@ all_temps <- list()
 
 for(i in 1:nrow(sites_coords)) {
   # Message de suivi dans la console
-  message("Récupération des températures pour le département : ", 
-          sites_coords$stateProvince[i], " (", i, "/23)...")
+  cat("Récupération des températures pour le département :",
+    sites_coords$stateProvince[i],
+    " (", i, "/23)...\n")
+  flush.console()
   
   # Appel de la fonction get_temp_site pour obtenir les données (vérification T2M incluse)
   temp_data <- get_temp_site(sites_coords$X[i], sites_coords$Y[i])
@@ -172,13 +173,9 @@ site_idx <- as.numeric(factor(final_data_for_model$stateProvince))
 cat("Nombre final d'observations introduites dans le modèle :", length(Y_ext), "\n")
 ```
 
-# La fonction de log-posteriori 
+# La fonction de log-posteriori
 
 ```{r}
-# ------------------------------------------------------------------------------
-#               La fonction log-postérieure (Version Extension)
-# ------------------------------------------------------------------------------
-
 log_posterior_ext <- function(Z, beta, Y, X, site_idx, mu, gamma) { 
   sigma2 <- exp(gamma)
   
@@ -218,8 +215,7 @@ log_posterior_ext <- function(Z, beta, Y, X, site_idx, mu, gamma) {
 }
 ```
 
-
-# Les fonctions de gradients 
+# Les fonctions de gradients
 
 ```{r}
 # ------------------------------------------------------------------------------
@@ -277,7 +273,7 @@ grad_gamma_ext <- function(Z, mu, gamma) {
 }
 ```
 
-# Algorithme Hamilton Monte Carlo avec methode leapfrog 
+# Algorithme Hamilton Monte Carlo avec methode leapfrog
 
 ```{r}
 leapfrog_ext <- function(Z, beta, mu, gamma, P_Z, P_beta, P_mu, P_gamma, Y, X, site_idx, eps, L, f_grad_Z, f_grad_beta, f_grad_mu, f_grad_gamma) {
@@ -405,7 +401,7 @@ run_chain_ext <- function(id, n_iter, Y, X, site_idx, eps, L) {
 }
 ```
 
-# Main 
+# Main
 
 ```{r}
 # ------------------------------------------------------------------------------
@@ -455,7 +451,6 @@ plot(sigma_trace2_ext, type="l",col="darkblue", main="Traceplot sigma")
 hist(sigma_trace2_ext,col="darkblue", main="Posterior sigma")
 
 ```
-
 
 ```{r}
 # Export les resultats de chaine 1
@@ -510,7 +505,6 @@ cat(sprintf("Moyen de σ^2  sans l'effet de la température : %.3f\n", sigma_old
 cat(sprintf("Moyen de σ^2  après inclusion de la température (Xij) : %.3f\n", sigma_new))
 ```
 
-
 ```{r}
 # mu du modèle précédent (calculé dans la section précédente)
 mu_old <- 1.391148
@@ -522,7 +516,6 @@ mu_new <- mean(all_results_ext[[1]]$mu)
 cat(sprintf("Moyenne de μ sans l'effet de la température : %.3f\n", mu_old))
 cat(sprintf("Moyenne de μ après inclusion de la température (Xij) : %.3f\n", mu_new))
 ```
-
 
 ```{r}
 # Transformation des paramètres et construction de la matrice finale
@@ -542,7 +535,6 @@ colnames(samples_matrix2) <- c(paste0("λ", 1:n_l), "μ", "σ^2","beta")
 
 head(round(samples_matrix2,5))
 ```
-
 
 ```{r}
 # Eliminer 1000 premiere ligne 
@@ -564,3 +556,31 @@ results2 <- data.frame(
 
 print(results2)
 ```
+
+# Conclusion
+
+Ce projet a permis de développer un modèle bayésien hiérarchique pour étudier la dynamique d’invasion du moustique tigre sur 12 ans. Les résultats montrent une progression importante de l’espèce au fil du temps, avec une forte variabilité entre les années et entre les régions. L’utilisation de l’algorithme HMC a assuré une bonne convergence du modèle et des estimations fiables.
+
+L’analyse met également en évidence l’importance des facteurs environnementaux. La température exerce un effet positif significatif sur l’abondance du moustique, confirmant son rôle majeur dans le processus d’invasion. L’ajout de cette covariable améliore la capacité explicative du modèle et permet de mieux prendre en compte les différences observées entre les territoires.
+
+Enfin, malgré certaines limites liées aux événements extrêmes et à l’hétérogénéité spatiale, le modèle fournit un cadre robuste pour comprendre et anticiper l’expansion du moustique tigre. Il constitue ainsi un outil pertinent pour la surveillance écologique et l’aide à la décision en matière de santé publique.
+
+# Références
+
+1. Neal, R. M. *MCMC using Hamiltonian Dynamics*. University of Toronto, Canada.
+   <https://arxiv.org/pdf/1206.1901>
+
+2. Walker, E., Soubeyrand, S. *Hamiltonian Monte Carlo in Practice*. Institut National de la Recherche Agronomique (INRA), Avignon, France.
+   <https://biosp.mathnum.inrae.fr/sites/default/files/2021-03/RR2016_49.pdf>
+
+3. Chen, Y. C. *Lecture 9: Hamiltonian Monte Carlo (Leapfrog)*. University of Washington.
+   <https://faculty.washington.edu/yenchic/19A_stat535/Lec9_HMC.pdf>
+
+4. IBM Documentation. *Statistiques bayésiennes (SPSS Statistics)*. IBM Docs.
+   <https://www.ibm.com/docs/fr/spss-statistics/cd?topic=ctas-bayesian-statistics>
+
+5. IRD (Institut de Recherche pour le Développement). *Changement climatique : le moustique tigre gagne du terrain en Europe*.
+   <https://lemag.ird.fr/fr/changement-climatique-le-moustique-tigre-gagne-du-terrain-en-europe>
+
+6. ANSES (Agence nationale de sécurité sanitaire). *Le moustique tigre (Aedes albopictus)*.
+   <https://www.anses.fr/fr/content/le-moustique-tigre>

@@ -1,21 +1,53 @@
 ---
 title: "Bienvenue sur le projet Modèle hiérarchique bayésien pour l’écologie"
-author: "NGUYEN Duc Hoang Viet"
+author: "NGUYEN Duc Hoang Viet  et  Tchanang Yvan Michel "
 ---
 
 # Présentation du projet
-On s’intéresse dans ce projet à la modélisation de la présence du moustique tigre (*Aedes albopictus*) en France
-métropolitaine. 
 
-Pour cela, on dispose de données d’occurences du moustique tigre, que l’on peut trouver
-par exemple sur le site de GBIF (Global Biodiversity Information Facility, https://www.gbif.org/).
+On s’intéresse dans ce projet à la modélisation de la présence du moustique tigre (*Aedes albopictus*) en France métropolitaine.
+
+Pour cela, on dispose de données d’occurences du moustique tigre, que l’on peut trouver par exemple sur le site de GBIF (Global Biodiversity Information Facility, <https://www.gbif.org/>).
 
 Le but est d’analyser la variabilité inter-site et intra-site des occurrences, en utilisant un modèle hiérarchique bayésien.
 
+# Organisation des codes
+
 Le projet est divisé en plusieurs parties :
 
-- **Partie 1 :** Extraction des données et pré-traitement
+-   **Partie 1 :** Extraction des données et pré-traitement
 
-- **Partie 2 :** Construction du modèle hiérarchique bayésien. 
+    Cette partie est dédiée à l'extraction des données au nettoyage des valeurs manquantes et à la visualisation initiale pour comprendre la distribution d' Aedes albopictus.
 
-- **Partie 3 :** Modele extension.
+-   **Partie 2 :** Construction du modèle hiérarchique bayésien
+
+    Nous avons expérimenté deux méthodes pour l'implémentation du modèle initial :
+
+    ```         
+        Méthode 1 : Génération par blocs séparés. Elle correspond à la version 1.
+
+        Méthode 2 : Génération du vecteur θ dans son ensemble.  Elle correspond à la version 2. 
+    ```
+
+-   **Partie 3 :** Modele extension
+
+    Dans cette partie, nous avons adopté la même méthode que celle utilisée dans la version 1, puisqu’elle nécessite de modifier les paramètres de la première partie. La première approche, plus modulaire, est donc la plus adaptée.
+
+
+::: callout-note
+## Consulter le rapport complet
+
+Vous pouvez consulter le rapport détaillé du projet (format PDF) en cliquant sur le lien ci-dessous :
+
+<a href="Rapport.pdf" target="_blank" style="font-weight: bold; text-decoration: underline;">  Ouvrir le rapport PDF </a>
+:::
+
+::: callout-note
+## Consulter le dashboard
+
+<a href="images/dashboard_moustique.html" target="_blank">
+  <img src="images/dashboard_bayes.png"
+       alt="Dashboard du projet"
+       style="max-width:100%; height:auto; border-radius:8px;">
+</a>
+:::

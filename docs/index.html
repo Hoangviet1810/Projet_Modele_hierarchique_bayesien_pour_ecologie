@@ -2,14 +2,17 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.7.32">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="author" content="NGUYEN Duc Hoang Viet">
+<meta name="author" content="NGUYEN Duc Hoang Viet et Tchanang Yvan Michel">
 
-<title>Bienvenue sur le projet Modèle hiérarchique bayésien pour l’écologie – Projet Model bayesien pour l’écologie</title>
+<title>Bienvenue sur le projet Modèle hiérarchique bayésien pour l’écologie – Projet Model hiérarchique bayesien pour l’écologie</title>
 <style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
 div.columns{display: flex; gap: min(4vw, 1.5em);}
@@ -37,10 +40,10 @@ ul.task-list li input[type="checkbox"] {
 <script src="site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="site_libs/quarto-html/anchor.min.js"></script>
 <link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-37eea08aefeeee20ff55810ff984fec1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-9344fb9851b4da3cab95007ef9d770dc.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-916b84f082b5c35a3380e3e38e0f0a11.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -70,6 +73,7 @@ ul.task-list li input[type="checkbox"] {
 }</script>
 
 
+<link rel="stylesheet" href="custom.css">
 </head>
 
 <body class="nav-fixed quarto-light">
@@ -80,7 +84,7 @@ ul.task-list li input[type="checkbox"] {
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
     <a class="navbar-brand" href="./index.html">
-    <span class="navbar-title">Projet Model bayesien pour l’écologie</span>
+    <span class="navbar-title">Projet Model hiérarchique bayesien pour l’écologie</span>
     </a>
   </div>
             <div id="quarto-search" class="" title="Search"></div>
@@ -98,12 +102,32 @@ ul.task-list li input[type="checkbox"] {
 <span class="menu-text">Extraction des données</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="./Part2.html"> 
-<span class="menu-text">Modèle hiérarchique bayésien</span></a>
+    <a class="nav-link" href="./Part2_1.html"> 
+<span class="menu-text">Modèle version 1</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./Part2_2.html"> 
+<span class="menu-text">Modèle version 2</span></a>
   </li>  
   <li class="nav-item">
     <a class="nav-link" href="./Part3.html"> 
 <span class="menu-text">Modèle Extension</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/Hoangviet1810/Projet-Modele-bayesien-pour-ecologie"> <i class="bi bi-github" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="https://ndhviet.wixsite.com/hviet-portfolio"> 
+<span class="menu-text">Portfolio de Viet</span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://www.linkedin.com/in/hoang-viet1810/?isSelfProfile=false"> <i class="bi bi-linkedin" role="img" aria-label="LinkedIn">
+</i> 
+<span class="menu-text"></span></a>
   </li>  
 </ul>
           </div> <!-- /navcollapse -->
@@ -118,10 +142,11 @@ ul.task-list li input[type="checkbox"] {
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
         <nav id="TOC" role="doc-toc" class="toc-active">
-    <h2 id="toc-title">On this page</h2>
+    <h2 id="toc-title">Sur cette page</h2>
    
   <ul>
   <li><a href="#présentation-du-projet" id="toc-présentation-du-projet" class="nav-link active" data-scroll-target="#présentation-du-projet">Présentation du projet</a></li>
+  <li><a href="#organisation-des-codes" id="toc-organisation-des-codes" class="nav-link" data-scroll-target="#organisation-des-codes">Organisation des codes</a></li>
   </ul>
 </nav>
     </div>
@@ -140,7 +165,7 @@ ul.task-list li input[type="checkbox"] {
     <div>
     <div class="quarto-title-meta-heading">Author</div>
     <div class="quarto-title-meta-contents">
-             <p>NGUYEN Duc Hoang Viet </p>
+             <p>NGUYEN Duc Hoang Viet et Tchanang Yvan Michel </p>
           </div>
   </div>
     
@@ -156,19 +181,84 @@ ul.task-list li input[type="checkbox"] {
 <section id="présentation-du-projet" class="level1">
 <h1>Présentation du projet</h1>
 <p>On s’intéresse dans ce projet à la modélisation de la présence du moustique tigre (<em>Aedes albopictus</em>) en France métropolitaine.</p>
-<p>Pour cela, on dispose de données d’occurences du moustique tigre, que l’on peut trouver par exemple sur le site de GBIF (Global Biodiversity Information Facility, https://www.gbif.org/).</p>
+<p>Pour cela, on dispose de données d’occurences du moustique tigre, que l’on peut trouver par exemple sur le site de GBIF (Global Biodiversity Information Facility, <a href="https://www.gbif.org/" class="uri">https://www.gbif.org/</a>).</p>
 <p>Le but est d’analyser la variabilité inter-site et intra-site des occurrences, en utilisant un modèle hiérarchique bayésien.</p>
+</section>
+<section id="organisation-des-codes" class="level1">
+<h1>Organisation des codes</h1>
 <p>Le projet est divisé en plusieurs parties :</p>
 <ul>
-<li><p><strong>Partie 1 :</strong> Extraction des données et pré-traitement</p></li>
-<li><p><strong>Partie 2 :</strong> Construction du modèle hiérarchique bayésien.</p></li>
-<li><p><strong>Partie 3 :</strong> Modele extension.</p></li>
+<li><p><strong>Partie 1 :</strong> Extraction des données et pré-traitement</p>
+<p>Cette partie est dédiée à l’extraction des données au nettoyage des valeurs manquantes et à la visualisation initiale pour comprendre la distribution d’ Aedes albopictus.</p></li>
+<li><p><strong>Partie 2 :</strong> Construction du modèle hiérarchique bayésien</p>
+<p>Nous avons expérimenté deux méthodes pour l’implémentation du modèle initial :</p>
+<pre><code>    Méthode 1 : Génération par blocs séparés. Elle correspond à la version 1.
+
+    Méthode 2 : Génération du vecteur θ dans son ensemble.  Elle correspond à la version 2. </code></pre></li>
+<li><p><strong>Partie 3 :</strong> Modele extension</p>
+<p>Dans cette partie, nous avons adopté la même méthode que celle utilisée dans la version 1, puisqu’elle nécessite de modifier les paramètres de la première partie. La première approche, plus modulaire, est donc la plus adaptée.</p></li>
 </ul>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Consulter le rapport complet
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Vous pouvez consulter le rapport détaillé du projet (format PDF) en cliquant sur le lien ci-dessous :</p>
+<p><a href="Rapport.pdf" target="_blank" style="font-weight: bold; text-decoration: underline;"> Ouvrir le rapport PDF </a></p>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Consulter le dashboard
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><a href="images/dashboard_moustique.html" target="_blank"> <img src="images/dashboard_bayes.png" alt="Dashboard du projet" style="max-width:100%; height:auto; border-radius:8px;"> </a></p>
+</div>
+</div>
 
 
 </section>
 
 </main> <!-- /main -->
+<div id="preloader">
+    <div class="loader-content">
+        <div class="loader-center-group">
+            <div class="spinner"></div> 
+
+            <div class="loader-letter-container">
+                <span class="loader-letter">V</span>
+            </div>
+        </div>
+        
+        <h2 class="loader-text">MADE BY NGUYEN DUC HOANG VIET</h2>
+        <p class="loader-subtext"> PROJET MODÈLE HIÉRARCHIQUE BAYÉSIEN</p>
+    </div>
+</div>
+
+<script>
+    // Giữ nguyên đoạn script
+    window.addEventListener('load', function () {
+        const preloader = document.getElementById('preloader');
+        setTimeout(function() {
+            preloader.classList.add('fade-out');
+        }, 1200); 
+    });
+</script>
+<div style="text-align:center; font-size:0.85em; color:#888; padding:25px;">
+  <strong>© 2026 NGUYEN Duc Hoang Viet &amp; Tchanang Yvan Michel — Tous droits réservés.</strong><br>
+  <strong>Université de Lille — Projet Modèle hiérarchique bayésien pour l’écologie<strong><br>
+  Toute reproduction, diffusion ou utilisation sans autorisation est interdite.
+</strong></strong></div><strong><strong>
 <script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
     const icon = "";
@@ -220,13 +310,14 @@ ul.task-list li input[type="checkbox"] {
       e.clearSelection();
     }
     const getTextToCopy = function(trigger) {
-        const codeEl = trigger.previousElementSibling.cloneNode(true);
-        for (const childEl of codeEl.children) {
-          if (isCodeAnnotation(childEl)) {
-            childEl.remove();
-          }
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
         }
-        return codeEl.innerText;
+      }
+      return codeEl.innerText;
     }
     const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
       text: getTextToCopy
@@ -568,9 +659,9 @@ ul.task-list li input[type="checkbox"] {
     }
   });
   </script>
-</div> <!-- /content -->
+</strong></strong></div><strong><strong> <!-- /content -->
 
 
 
 
-</body></html>
+</strong></strong></body></html>

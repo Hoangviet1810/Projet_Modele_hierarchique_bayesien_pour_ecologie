@@ -1,0 +1,1456 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.32">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="NGUYEN Duc Hoang Viet">
+
+<title>Partie 2 Construction du modèle hiérarchique bayésien version 1 – Projet Model hiérarchique bayesien pour l’écologie</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-37eea08aefeeee20ff55810ff984fec1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-b40c13d1a340c1202815d47d89cb925e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="custom.css">
+</head>
+
+<body class="nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">Projet Model hiérarchique bayesien pour l’écologie</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="./index.html"> 
+<span class="menu-text">Accueil</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./Part1.html"> 
+<span class="menu-text">Extraction des données</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link active" href="./Part2_1.html" aria-current="page"> 
+<span class="menu-text">Modèle version 1</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./Part2_2.html"> 
+<span class="menu-text">Modèle version 2</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./Part3.html"> 
+<span class="menu-text">Modèle Extension</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/Hoangviet1810/Projet-Modele-bayesien-pour-ecologie"> <i class="bi bi-github" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="https://ndhviet.wixsite.com/hviet-portfolio"> 
+<span class="menu-text">Portfolio de Viet</span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://www.linkedin.com/in/hoang-viet1810/?isSelfProfile=false"> <i class="bi bi-linkedin" role="img" aria-label="LinkedIn">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Sur cette page</h2>
+   
+  <ul>
+  <li><a href="#construction-du-modèle-hiérarchique-bayésien" id="toc-construction-du-modèle-hiérarchique-bayésien" class="nav-link active" data-scroll-target="#construction-du-modèle-hiérarchique-bayésien"><span class="header-section-number">1</span> Construction du modèle hiérarchique bayésien</a></li>
+  <li><a href="#extraction-des-données" id="toc-extraction-des-données" class="nav-link" data-scroll-target="#extraction-des-données"><span class="header-section-number">2</span> Extraction des données</a></li>
+  <li><a href="#la-fonction-de-log-posteriori" id="toc-la-fonction-de-log-posteriori" class="nav-link" data-scroll-target="#la-fonction-de-log-posteriori"><span class="header-section-number">3</span> La fonction de log-posteriori</a></li>
+  <li><a href="#les-fonctions-de-gradients" id="toc-les-fonctions-de-gradients" class="nav-link" data-scroll-target="#les-fonctions-de-gradients"><span class="header-section-number">4</span> Les fonctions de gradients</a></li>
+  <li><a href="#algorithme-hamiltonian-monte-carlo-avec-méthode-de-leapfrog" id="toc-algorithme-hamiltonian-monte-carlo-avec-méthode-de-leapfrog" class="nav-link" data-scroll-target="#algorithme-hamiltonian-monte-carlo-avec-méthode-de-leapfrog"><span class="header-section-number">5</span> Algorithme Hamiltonian Monte Carlo avec méthode de leapfrog</a></li>
+  <li><a href="#diagnostics-de-convergence-et-performances" id="toc-diagnostics-de-convergence-et-performances" class="nav-link" data-scroll-target="#diagnostics-de-convergence-et-performances"><span class="header-section-number">6</span> DIAGNOSTICS DE CONVERGENCE ET PERFORMANCES</a></li>
+  <li><a href="#estimateurs-ponctuels-et-des-intervalles-de-confiances-pour-chaque-parametre" id="toc-estimateurs-ponctuels-et-des-intervalles-de-confiances-pour-chaque-parametre" class="nav-link" data-scroll-target="#estimateurs-ponctuels-et-des-intervalles-de-confiances-pour-chaque-parametre"><span class="header-section-number">7</span> Estimateurs ponctuels et des intervalles de confiances pour chaque parametre</a></li>
+  <li><a href="#analyser-la-qualité-prédictive-du-modèle." id="toc-analyser-la-qualité-prédictive-du-modèle." class="nav-link" data-scroll-target="#analyser-la-qualité-prédictive-du-modèle."><span class="header-section-number">8</span> Analyser la qualité prédictive du modèle.</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Partie 2 Construction du modèle hiérarchique bayésien version 1</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>NGUYEN Duc Hoang Viet </p>
+          </div>
+  </div>
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="construction-du-modèle-hiérarchique-bayésien" class="level1" data-number="1">
+<h1 data-number="1"><span class="header-section-number">1</span> Construction du modèle hiérarchique bayésien</h1>
+<p>Pour l’année <span class="math inline">\(i\)</span> et le site <span class="math inline">\(j\)</span>, on note <span class="math inline">\(Y_{i,j}\)</span> le nombre d’occurrences du moustique tigre.</p>
+<p>On propose le modèle hiérarchique suivant :</p>
+<p><span class="math display">\[
+Y_{i,j} \mid \lambda_i \sim \text{Poisson}(\lambda_i),
+\]</span></p>
+<p><span class="math display">\[
+\log(\lambda_i) \mid \mu, \sigma^2 \sim \mathcal{N}(\mu, \sigma^2).
+\]</span></p>
+<p>On cherche à estimer <span class="math inline">\(\mu\)</span> et <span class="math inline">\(\sigma^2\)</span>, et à prédire les <span class="math inline">\(\lambda_i\)</span>.Ces derniers, appelés effets aléatoires, représentent la moyenne (et également la variance) annuelle des occurrences.</p>
+<p>Hyperparamètres : <span class="math inline">\(\sigma^2 \sim \text{Exp}(1)\)</span>, <span class="math inline">\(\mu \sim \mathcal{N}(0,4)\)</span></p>
+<p>Reparamétrisation : <span class="math inline">\(\gamma = \log(\sigma^2)\)</span>, <span class="math inline">\(Z_i = \log(\lambda_i)\)</span></p>
+<p>Il y a 5 fonction. Ce sont:</p>
+<ul>
+<li>fonction log_posterior : calculer la log posterior</li>
+<li>fonction les gradients : calculer les gradients de -log_postierior par les parametres <span class="math inline">\(Z_i\)</span>, <span class="math inline">\(\mu\)</span>, <span class="math inline">\(\gamma\)</span></li>
+<li>fonction leapfrog. : calculer les steps pour algo HMC</li>
+<li>fonction HMC_step : algo HMC</li>
+<li>fonction run_chain : pour faire des chaines en même temps</li>
+</ul>
+</section>
+<section id="extraction-des-données" class="level1" data-number="2">
+<h1 data-number="2"><span class="header-section-number">2</span> Extraction des données</h1>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ------------------------------------------------------------------------------</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co">#                   CHARGEMENT ET PRÉ-TRAITEMENT DES DONNÉES</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co"># ------------------------------------------------------------------------------</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(rgbif)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(sf)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(maps)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>tigre_moustique_data <span class="ot">&lt;-</span> <span class="fu">occ_search</span>(</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">scientificName =</span> <span class="st">"Aedes albopictus"</span>,</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">country =</span> <span class="st">"FR"</span>,</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">limit =</span> <span class="dv">2210</span>,</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>)<span class="sc">$</span>data</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="co"># ------------------------------------------------------------------------------</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="co">#                   RESUME DES DONNÉES</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="co"># ------------------------------------------------------------------------------</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>summary_table <span class="ot">&lt;-</span> tigre_moustique_data <span class="sc">%&gt;%</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(year), <span class="sc">!</span><span class="fu">is.na</span>(stateProvince)) <span class="sc">%&gt;%</span>  </span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(year, stateProvince) <span class="sc">%&gt;%</span>                 </span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">n_occurrences =</span> <span class="fu">n</span>(), <span class="at">.groups =</span> <span class="st">"drop"</span>) </span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> summary_table</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>df<span class="sc">$</span>i <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(<span class="fu">factor</span>(df<span class="sc">$</span>year))</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>df<span class="sc">$</span>j <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(<span class="fu">factor</span>(df<span class="sc">$</span>stateProvince))</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>df[, <span class="fu">c</span>(<span class="st">"year"</span>, <span class="st">"stateProvince"</span>, <span class="st">"i"</span>, <span class="st">"j"</span>)]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 89 × 4
+    year stateProvince                  i     j
+   &lt;int&gt; &lt;chr&gt;                      &lt;int&gt; &lt;int&gt;
+ 1  2014 Languedoc-Roussillon           1    12
+ 2  2015 Provence-Alpes-Côte d'Azur     2    18
+ 3  2016 Provence-Alpes-Côte d'Azur     3    18
+ 4  2017 Languedoc-Roussillon           4    12
+ 5  2017 Midi-Pyrénées                  4    14
+ 6  2018 Languedoc-Roussillon           5    12
+ 7  2018 Midi-Pyrénées                  5    14
+ 8  2019 Aquitaine                      6     2
+ 9  2019 Corse                          6     8
+10  2019 Languedoc-Roussillon           6    12
+# ℹ 79 more rows</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ------------------------------------------------------------------------------</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co">#                   CHARGEMENT ET PRÉ-TRAITEMENT DES DONNÉES</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co"># ------------------------------------------------------------------------------</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Calcul des agrégats annuels (données synthétiques par année)</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>df_annual <span class="ot">&lt;-</span> summary_table <span class="sc">%&gt;%</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(year) <span class="sc">%&gt;%</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">Y_sum =</span> <span class="fu">sum</span>(n_occurrences),          <span class="co"># Nombre total de moustiques capturés par an</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">J_counts =</span> <span class="fu">n_distinct</span>(stateProvince) <span class="co"># Nombre de provinces ayant rapporté des données</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(year)</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Extraction sous forme de vecteurs pour le modèle</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>Y <span class="ot">&lt;-</span> df_annual<span class="sc">$</span>Y_sum</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>J <span class="ot">&lt;-</span> df_annual<span class="sc">$</span>J_counts</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>I <span class="ot">&lt;-</span> <span class="fu">nrow</span>(df_annual) <span class="co"># Nombre total d'années d'observation (généralement 12)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="la-fonction-de-log-posteriori" class="level1" data-number="3">
+<h1 data-number="3"><span class="header-section-number">3</span> La fonction de log-posteriori</h1>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>log_posterior <span class="ot">&lt;-</span> <span class="cf">function</span>(Z, Y, J, mu, gamma) { </span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  sigma2 <span class="ot">&lt;-</span> <span class="fu">exp</span>(gamma)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Terme 1: Vraisemblance de Poisson</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  log_vrais <span class="ot">&lt;-</span> <span class="fu">sum</span>(Y <span class="sc">*</span> Z <span class="sc">-</span> J <span class="sc">*</span> <span class="fu">exp</span>(Z))</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Terme 2: Loi a priori conditionnelle des Zi (Loi Normale)</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  log_prior_Z <span class="ot">&lt;-</span> <span class="fu">sum</span>(<span class="fu">dnorm</span>(Z, <span class="at">mean =</span> mu, <span class="at">sd =</span> <span class="fu">sqrt</span>(sigma2), <span class="at">log =</span> <span class="cn">TRUE</span>))</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Terme 3: Loi a priori de μ, σ2</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>  log_prior_mu <span class="ot">&lt;-</span> <span class="fu">dnorm</span>(mu, <span class="at">mean =</span> <span class="dv">0</span>, <span class="at">sd =</span> <span class="dv">2</span>, <span class="at">log =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>  log_prior_sigma2 <span class="ot">&lt;-</span> <span class="fu">dexp</span>(sigma2, <span class="at">rate =</span> <span class="dv">1</span>, <span class="at">log =</span> <span class="cn">TRUE</span>) <span class="sc">+</span> gamma </span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>  res <span class="ot">&lt;-</span> log_vrais <span class="sc">+</span> log_prior_Z <span class="sc">+</span> log_prior_mu <span class="sc">+</span> log_prior_sigma2</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">is.na</span>(res) <span class="sc">||</span> <span class="fu">is.infinite</span>(res)) <span class="fu">return</span>(<span class="sc">-</span><span class="fl">1e20</span>) </span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(res)</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="les-fonctions-de-gradients" class="level1" data-number="4">
+<h1 data-number="4"><span class="header-section-number">4</span> Les fonctions de gradients</h1>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ------------------------------------------------------------------------------</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="co">#       Gradient de l'Énergie Potentielle U(theta) = -log_posterior</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co"># ------------------------------------------------------------------------------</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Calcul du gradient de l'énergie (nabla U) pour l'algorithme HMC.</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Rappel : U = -log(pi(theta|y)), nous implémentons ici les dérivées </span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="co"># partielles analytiques obtenues précédemment.</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="co"># ------------------------------------------------------------------------------</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Derivees partielles par rapport aux Zi (Vectorise)</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>grad_Z <span class="ot">&lt;-</span> <span class="cf">function</span>(Z, Y, J, mu, gamma) {</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>  sigma2 <span class="ot">&lt;-</span> <span class="fu">exp</span>(gamma)</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(J <span class="sc">*</span> <span class="fu">exp</span>(Z) <span class="sc">-</span> Y <span class="sc">+</span> (Z <span class="sc">-</span> mu) <span class="sc">/</span> sigma2)</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a><span class="co"># # Derivee partielle par rapport à mu</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>grad_mu <span class="ot">&lt;-</span> <span class="cf">function</span>(Z, mu, gamma) {</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>  sigma2 <span class="ot">&lt;-</span> <span class="fu">exp</span>(gamma)</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(<span class="fu">sum</span>(mu <span class="sc">-</span> Z) <span class="sc">/</span> sigma2 <span class="sc">+</span> mu <span class="sc">/</span> <span class="dv">4</span>)</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a><span class="co"># Dérivée partielle par rapport à gamma (log-variance)</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a><span class="co"># Inclut la correction du Jacobien pour la reparamétrisation</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>grad_gamma <span class="ot">&lt;-</span> <span class="cf">function</span>(Z, mu, gamma) {</span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>  sigma2 <span class="ot">&lt;-</span> <span class="fu">exp</span>(gamma)</span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>  I <span class="ot">&lt;-</span> <span class="fu">length</span>(Z)</span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(<span class="sc">-</span><span class="fu">sum</span>((Z <span class="sc">-</span> mu)<span class="sc">^</span><span class="dv">2</span>) <span class="sc">/</span> (<span class="dv">2</span> <span class="sc">*</span> sigma2) <span class="sc">+</span> I <span class="sc">/</span> <span class="dv">2</span> <span class="sc">+</span> <span class="fu">exp</span>(gamma) <span class="sc">-</span> <span class="dv">1</span>)</span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="algorithme-hamiltonian-monte-carlo-avec-méthode-de-leapfrog" class="level1" data-number="5">
+<h1 data-number="5"><span class="header-section-number">5</span> Algorithme Hamiltonian Monte Carlo avec méthode de leapfrog</h1>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ------------------------------------------------------------------------------</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="co">#                 MOTEUR PHYSIQUE : HAMILTONIAN MONTE CARLO</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co"># ------------------------------------------------------------------------------</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co">#                          1. Algorithme Leapfrog</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Cette fonction simule la trajectoire hamiltonienne en mettant à jour</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="co"># alternativement les positions et les impulsions.</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="co"># ------------------------------------------------------------------------------</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>leapfrog <span class="ot">&lt;-</span> <span class="cf">function</span>(Z, mu, gamma, P_Z, P_mu, P_gamma, Y, J, eps, L, f_grad_Z, f_grad_mu, f_grad_gamma) {</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Premier demi-pas pour les impulsions (Momentum half-step)</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>  P_Z     <span class="ot">&lt;-</span> P_Z     <span class="sc">-</span> <span class="fl">0.5</span> <span class="sc">*</span> eps <span class="sc">*</span> <span class="fu">f_grad_Z</span>(Z, Y, J, mu, gamma)</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>  P_mu    <span class="ot">&lt;-</span> P_mu    <span class="sc">-</span> <span class="fl">0.5</span> <span class="sc">*</span> eps <span class="sc">*</span> <span class="fu">f_grad_mu</span>(Z, mu, gamma)</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>  P_gamma <span class="ot">&lt;-</span> P_gamma <span class="sc">-</span> <span class="fl">0.5</span> <span class="sc">*</span> eps <span class="sc">*</span> <span class="fu">f_grad_gamma</span>(Z, mu, gamma)</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (l <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>L) {</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Mise à jour des positions (Position update)</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>    Z     <span class="ot">&lt;-</span> Z     <span class="sc">+</span> eps <span class="sc">*</span> P_Z</span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>    mu    <span class="ot">&lt;-</span> mu    <span class="sc">+</span> eps <span class="sc">*</span> P_mu</span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>    gamma <span class="ot">&lt;-</span> gamma <span class="sc">+</span> eps <span class="sc">*</span> P_gamma</span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (l <span class="sc">&lt;</span> L) {</span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>      <span class="co"># Mise à jour complète des impulsions (sauf pour le dernier pas)</span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>      P_Z     <span class="ot">&lt;-</span> P_Z     <span class="sc">-</span> eps <span class="sc">*</span> <span class="fu">f_grad_Z</span>(Z, Y, J, mu, gamma)</span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>      P_mu    <span class="ot">&lt;-</span> P_mu    <span class="sc">-</span> eps <span class="sc">*</span> <span class="fu">f_grad_mu</span>(Z, mu, gamma)</span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>      P_gamma <span class="ot">&lt;-</span> P_gamma <span class="sc">-</span> eps <span class="sc">*</span> <span class="fu">f_grad_gamma</span>(Z, mu, gamma)</span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Dernier demi-pas pour les impulsions (Final momentum half-step)</span></span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a>  P_Z     <span class="ot">&lt;-</span> P_Z     <span class="sc">-</span> <span class="fl">0.5</span> <span class="sc">*</span> eps <span class="sc">*</span> <span class="fu">f_grad_Z</span>(Z, Y, J, mu, gamma)</span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a>  P_mu    <span class="ot">&lt;-</span> P_mu    <span class="sc">-</span> <span class="fl">0.5</span> <span class="sc">*</span> eps <span class="sc">*</span> <span class="fu">f_grad_mu</span>(Z, mu, gamma)</span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a>  P_gamma <span class="ot">&lt;-</span> P_gamma <span class="sc">-</span> <span class="fl">0.5</span> <span class="sc">*</span> eps <span class="sc">*</span> <span class="fu">f_grad_gamma</span>(Z, mu, gamma)</span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(<span class="fu">list</span>(<span class="at">Z =</span> Z, <span class="at">mu =</span> mu, <span class="at">gamma =</span> gamma, <span class="at">P_Z =</span> P_Z, <span class="at">P_mu =</span> P_mu, <span class="at">P_gamma =</span> P_gamma))</span>
+<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ------------------------------------------------------------------------------</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="co">#              Fonction principal Hamiltonian Monte Carlo </span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co"># ------------------------------------------------------------------------------</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>HMC_step_MC <span class="ot">&lt;-</span> <span class="cf">function</span>(Z, mu, gamma, Y, J, eps, L, lp_func, f_grad_Z, f_grad_mu, f_grad_gamma) {</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="co"># 1. Initialisation des impulsions aleatoire</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  P_Z_init  <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(<span class="fu">length</span>(Z))</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>  P_mu_init <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(<span class="dv">1</span>)</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  P_gamma_init <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(<span class="dv">1</span>)</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>  <span class="co"># 2. Calcul de l'énergie initiale (Hamiltonien initial)</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>  init_U <span class="ot">&lt;-</span> <span class="sc">-</span><span class="fu">lp_func</span>(Z, Y, J, mu, gamma)</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>  init_K <span class="ot">&lt;-</span> <span class="fu">sum</span>(P_Z_init<span class="sc">^</span><span class="dv">2</span>)<span class="sc">/</span><span class="dv">2</span> <span class="sc">+</span> P_mu_init<span class="sc">^</span><span class="dv">2</span><span class="sc">/</span><span class="dv">2</span> <span class="sc">+</span> P_gamma_init<span class="sc">^</span><span class="dv">2</span><span class="sc">/</span><span class="dv">2</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>  <span class="co"># 3. Simulation de la trajectoire avec l'intégrateur Leapfrog</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>  res <span class="ot">&lt;-</span> <span class="fu">leapfrog</span>(Z, mu, gamma, P_Z_init, P_mu_init, P_gamma_init, Y, J, eps, L, f_grad_Z, f_grad_mu, f_grad_gamma)</span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>  <span class="co"># 4. Calcul de l'énergie finale (Hamiltonien final)</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>  final_U <span class="ot">&lt;-</span> <span class="sc">-</span><span class="fu">lp_func</span>(res<span class="sc">$</span>Z, Y, J, res<span class="sc">$</span>mu, res<span class="sc">$</span>gamma)</span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>  final_K <span class="ot">&lt;-</span> <span class="fu">sum</span>(res<span class="sc">$</span>P_Z<span class="sc">^</span><span class="dv">2</span>)<span class="sc">/</span><span class="dv">2</span> <span class="sc">+</span> <span class="fu">sum</span>(res<span class="sc">$</span>P_mu<span class="sc">^</span><span class="dv">2</span>)<span class="sc">/</span><span class="dv">2</span> <span class="sc">+</span> <span class="fu">sum</span>(res<span class="sc">$</span>P_gamma<span class="sc">^</span><span class="dv">2</span>)<span class="sc">/</span><span class="dv">2</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>  <span class="co"># 5. Étape d'acceptation de Metropolis-Hastings</span></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">log</span>(<span class="fu">runif</span>(<span class="dv">1</span>)) <span class="sc">&lt;</span> (init_U <span class="sc">+</span> init_K <span class="sc">-</span> final_U <span class="sc">-</span> final_K)) {</span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span>(<span class="fu">list</span>(<span class="at">Z =</span> res<span class="sc">$</span>Z, <span class="at">mu =</span> res<span class="sc">$</span>mu, <span class="at">gamma =</span> res<span class="sc">$</span>gamma, <span class="at">accepted =</span> <span class="cn">TRUE</span>))</span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span>(<span class="fu">list</span>(<span class="at">Z =</span> Z, <span class="at">mu =</span> mu, <span class="at">gamma =</span> gamma, <span class="at">accepted =</span> <span class="cn">FALSE</span>))</span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ------------------------------------------------------------------------------</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Fonction pour exécuter une chaîne MCMC (Hamiltonian Monte Carlo)</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co"># ------------------------------------------------------------------------------</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>run_chain <span class="ot">&lt;-</span> <span class="cf">function</span>(id, n_iter, Y, J, eps, L) {</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"Exécution de la Chaîne %d...</span><span class="sc">\n</span><span class="st">"</span>, id))</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  <span class="co"># 1. Initialisation des paramètres (Valeurs de départ)</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  <span class="co"># On utilise les données observées pour un démarrage proche de la zone cible</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>  curr_Z      <span class="ot">&lt;-</span> <span class="fu">log</span>((Y <span class="sc">/</span> J) <span class="sc">+</span> <span class="fl">0.1</span>)  </span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>  curr_mu     <span class="ot">&lt;-</span> <span class="fu">mean</span>(curr_Z)            </span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>  curr_gamma  <span class="ot">&lt;-</span> <span class="fu">log</span>(<span class="fu">var</span>(curr_Z) <span class="sc">+</span> <span class="fl">0.01</span>) <span class="co"># Initialisation de la log-variance</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>  <span class="co"># 2. Préparation des structures de stockage (Traces)</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>  mu_trace    <span class="ot">&lt;-</span> <span class="fu">numeric</span>(n_iter)</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>  sigma_trace <span class="ot">&lt;-</span> <span class="fu">numeric</span>(n_iter)</span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>  Z_trace     <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="dv">0</span>, n_iter, <span class="fu">length</span>(Y)) <span class="co"># Stockage pour les 12 années</span></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>  lp_trace    <span class="ot">&lt;-</span> <span class="fu">numeric</span>(n_iter)              <span class="co"># Évolution du log-posterior</span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Compteur pour le taux d'acceptation</span></span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>  accepted_count <span class="ot">&lt;-</span> <span class="dv">0</span></span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>  <span class="co"># 3. Boucle principale d'échantillonnage</span></span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (k <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>n_iter) {</span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Appel de l'étape HMC pour mettre à jour l'état de la chaîne</span></span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>    res <span class="ot">&lt;-</span> <span class="fu">HMC_step_MC</span>(curr_Z, curr_mu, curr_gamma, Y, J, eps, L, </span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a>                       <span class="at">lp_func =</span> log_posterior, </span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>                       <span class="at">f_grad_Z =</span> grad_Z, </span>
+<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a>                       <span class="at">f_grad_mu =</span> grad_mu, </span>
+<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>                       <span class="at">f_grad_gamma =</span> grad_gamma)</span>
+<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Mise à jour des valeurs actuelles (Acceptées ou Rejetées)</span></span>
+<span id="cb8-32"><a href="#cb8-32" aria-hidden="true" tabindex="-1"></a>    curr_Z     <span class="ot">&lt;-</span> res<span class="sc">$</span>Z</span>
+<span id="cb8-33"><a href="#cb8-33" aria-hidden="true" tabindex="-1"></a>    curr_mu    <span class="ot">&lt;-</span> res<span class="sc">$</span>mu</span>
+<span id="cb8-34"><a href="#cb8-34" aria-hidden="true" tabindex="-1"></a>    curr_gamma <span class="ot">&lt;-</span> res<span class="sc">$</span>gamma</span>
+<span id="cb8-35"><a href="#cb8-35" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb8-36"><a href="#cb8-36" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (res<span class="sc">$</span>accepted) {</span>
+<span id="cb8-37"><a href="#cb8-37" aria-hidden="true" tabindex="-1"></a>      accepted_count <span class="ot">&lt;-</span> accepted_count <span class="sc">+</span> <span class="dv">1</span></span>
+<span id="cb8-38"><a href="#cb8-38" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb8-39"><a href="#cb8-39" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb8-40"><a href="#cb8-40" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 4. Stockage des échantillons et transformation de gamma en sigma</span></span>
+<span id="cb8-41"><a href="#cb8-41" aria-hidden="true" tabindex="-1"></a>    mu_trace[k]    <span class="ot">&lt;-</span> curr_mu</span>
+<span id="cb8-42"><a href="#cb8-42" aria-hidden="true" tabindex="-1"></a>    sigma_trace[k] <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(<span class="fu">exp</span>(curr_gamma)) <span class="co"># Retour à l'écart-type original</span></span>
+<span id="cb8-43"><a href="#cb8-43" aria-hidden="true" tabindex="-1"></a>    Z_trace[k, ]   <span class="ot">&lt;-</span> curr_Z</span>
+<span id="cb8-44"><a href="#cb8-44" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb8-45"><a href="#cb8-45" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Calcul de la densité log-posterior pour le suivi de la convergence</span></span>
+<span id="cb8-46"><a href="#cb8-46" aria-hidden="true" tabindex="-1"></a>    lp_trace[k]    <span class="ot">&lt;-</span> <span class="fu">log_posterior</span>(curr_Z, Y, J, curr_mu, curr_gamma)  </span>
+<span id="cb8-47"><a href="#cb8-47" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb8-48"><a href="#cb8-48" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 5. Affichage de la progression</span></span>
+<span id="cb8-49"><a href="#cb8-49" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (k <span class="sc">%%</span> (n_iter <span class="sc">/</span> <span class="dv">4</span>) <span class="sc">==</span> <span class="dv">0</span>) {</span>
+<span id="cb8-50"><a href="#cb8-50" aria-hidden="true" tabindex="-1"></a>      current_acc_rate <span class="ot">&lt;-</span> (accepted_count <span class="sc">/</span> k) <span class="sc">*</span> <span class="dv">100</span></span>
+<span id="cb8-51"><a href="#cb8-51" aria-hidden="true" tabindex="-1"></a>      <span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"  Chaîne %d | Progression : %d / %d (%d%%) | Taux d'acc. : %.1f%%</span><span class="sc">\n</span><span class="st">"</span>, </span>
+<span id="cb8-52"><a href="#cb8-52" aria-hidden="true" tabindex="-1"></a>                  id, k, n_iter, <span class="fu">round</span>(k<span class="sc">/</span>n_iter<span class="sc">*</span><span class="dv">100</span>), current_acc_rate))</span>
+<span id="cb8-53"><a href="#cb8-53" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb8-54"><a href="#cb8-54" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb8-55"><a href="#cb8-55" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb8-56"><a href="#cb8-56" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Retourne les résultats sous forme de liste</span></span>
+<span id="cb8-57"><a href="#cb8-57" aria-hidden="true" tabindex="-1"></a>  final_acc_rate <span class="ot">&lt;-</span> (accepted_count <span class="sc">/</span> n_iter) </span>
+<span id="cb8-58"><a href="#cb8-58" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"=&gt; Chaîne %d terminée avec succès. Taux d'acceptation final : %.2f%%</span><span class="sc">\n</span><span class="st">"</span>, id, final_acc_rate<span class="sc">*</span> <span class="dv">100</span>))</span>
+<span id="cb8-59"><a href="#cb8-59" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb8-60"><a href="#cb8-60" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(<span class="fu">list</span>(<span class="at">mu =</span> mu_trace, <span class="at">sigma =</span> sigma_trace, <span class="at">Z =</span> Z_trace, <span class="at">lp =</span> lp_trace, <span class="at">acc_rate =</span> final_acc_rate))</span>
+<span id="cb8-61"><a href="#cb8-61" aria-hidden="true" tabindex="-1"></a>  <span class="co">#return(list(mu = mu_trace, sigma = sigma_trace, Z = Z_trace, lp = lp_trace))</span></span>
+<span id="cb8-62"><a href="#cb8-62" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="diagnostics-de-convergence-et-performances" class="level1" data-number="6">
+<h1 data-number="6"><span class="header-section-number">6</span> DIAGNOSTICS DE CONVERGENCE ET PERFORMANCES</h1>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ------------------------------------------------------------------------------</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="co">#   Main de lancement de la Simulation MCMC (Multi-chaînes)</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="co"># ------------------------------------------------------------------------------</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Configuration des hyperparamètres de l'algorithme HMC</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>n_chains <span class="ot">&lt;-</span> <span class="dv">5</span>          <span class="co"># Nombre de chaînes indépendantes pour tester la convergence</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>n_iter   <span class="ot">&lt;-</span> <span class="dv">100000</span>       <span class="co"># Nombre total d'itérations par chaîne</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>eps      <span class="ot">&lt;-</span> <span class="fl">0.02</span>       <span class="co"># Taille du pas (Step size) - à ajuster selon l'acceptation</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>L        <span class="ot">&lt;-</span> <span class="dv">100</span>        <span class="co"># Nombre de pas Leapfrog par itération</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Initialisation de la liste pour stocker les résultats de chaque chaîne</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>all_results <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Exécution des chaînes en boucle</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>) </span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>n_chains) {</span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>  start_time <span class="ot">&lt;-</span> <span class="fu">Sys.time</span>() <span class="co"># Chronométrage pour estimer le temps total</span></span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>  all_results[[i]] <span class="ot">&lt;-</span> <span class="fu">run_chain</span>(i, n_iter, Y, J, eps, L)</span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a>  end_time <span class="ot">&lt;-</span> <span class="fu">Sys.time</span>()</span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"Chaîne %d terminée en %.2f minutes.</span><span class="sc">\n</span><span class="st">"</span>, i, <span class="fu">as.numeric</span>(end_time <span class="sc">-</span> start_time, <span class="at">units=</span><span class="st">"mins"</span>)))</span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Exécution de la Chaîne 1...
+  Chaîne 1 | Progression : 25000 / 100000 (25%) | Taux d'acc. : 98.6%
+  Chaîne 1 | Progression : 50000 / 100000 (50%) | Taux d'acc. : 98.6%
+  Chaîne 1 | Progression : 75000 / 100000 (75%) | Taux d'acc. : 98.6%
+  Chaîne 1 | Progression : 100000 / 100000 (100%) | Taux d'acc. : 98.6%
+=&gt; Chaîne 1 terminée avec succès. Taux d'acceptation final : 98.59%
+Chaîne 1 terminée en 1.01 minutes.
+Exécution de la Chaîne 2...
+  Chaîne 2 | Progression : 25000 / 100000 (25%) | Taux d'acc. : 98.5%
+  Chaîne 2 | Progression : 50000 / 100000 (50%) | Taux d'acc. : 98.6%
+  Chaîne 2 | Progression : 75000 / 100000 (75%) | Taux d'acc. : 98.6%
+  Chaîne 2 | Progression : 100000 / 100000 (100%) | Taux d'acc. : 98.6%
+=&gt; Chaîne 2 terminée avec succès. Taux d'acceptation final : 98.63%
+Chaîne 2 terminée en 0.99 minutes.
+Exécution de la Chaîne 3...
+  Chaîne 3 | Progression : 25000 / 100000 (25%) | Taux d'acc. : 98.6%
+  Chaîne 3 | Progression : 50000 / 100000 (50%) | Taux d'acc. : 98.6%
+  Chaîne 3 | Progression : 75000 / 100000 (75%) | Taux d'acc. : 98.6%
+  Chaîne 3 | Progression : 100000 / 100000 (100%) | Taux d'acc. : 98.6%
+=&gt; Chaîne 3 terminée avec succès. Taux d'acceptation final : 98.61%
+Chaîne 3 terminée en 0.99 minutes.
+Exécution de la Chaîne 4...
+  Chaîne 4 | Progression : 25000 / 100000 (25%) | Taux d'acc. : 98.6%
+  Chaîne 4 | Progression : 50000 / 100000 (50%) | Taux d'acc. : 98.6%
+  Chaîne 4 | Progression : 75000 / 100000 (75%) | Taux d'acc. : 98.6%
+  Chaîne 4 | Progression : 100000 / 100000 (100%) | Taux d'acc. : 98.6%
+=&gt; Chaîne 4 terminée avec succès. Taux d'acceptation final : 98.63%
+Chaîne 4 terminée en 1.01 minutes.
+Exécution de la Chaîne 5...
+  Chaîne 5 | Progression : 25000 / 100000 (25%) | Taux d'acc. : 98.7%
+  Chaîne 5 | Progression : 50000 / 100000 (50%) | Taux d'acc. : 98.6%
+  Chaîne 5 | Progression : 75000 / 100000 (75%) | Taux d'acc. : 98.6%
+  Chaîne 5 | Progression : 100000 / 100000 (100%) | Taux d'acc. : 98.6%
+=&gt; Chaîne 5 terminée avec succès. Taux d'acceptation final : 98.60%
+Chaîne 5 terminée en 1.00 minutes.</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyr)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Préparation des données pour ggplot2</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Extraction de la log-postériore pour toutes les chaînes de simulation</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>lp_data <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">Iteration =</span> <span class="dv">1</span><span class="sc">:</span>n_iter,</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">Chaine_1  =</span> all_results[[<span class="dv">1</span>]]<span class="sc">$</span>lp,</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">Chaine_2  =</span> all_results[[<span class="dv">2</span>]]<span class="sc">$</span>lp,</span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">Chaine_3  =</span> all_results[[<span class="dv">3</span>]]<span class="sc">$</span>lp,</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">Chaine_4  =</span> all_results[[<span class="dv">4</span>]]<span class="sc">$</span>lp,</span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">Chaine_5  =</span> all_results[[<span class="dv">5</span>]]<span class="sc">$</span>lp</span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Transformation des données du format large au format long pour ggplot2</span></span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>lp_long <span class="ot">&lt;-</span> lp_data <span class="sc">%&gt;%</span></span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(<span class="at">cols =</span> <span class="fu">starts_with</span>(<span class="st">"Chaine"</span>), </span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a>               <span class="at">names_to =</span> <span class="st">"Chaine"</span>, </span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a>               <span class="at">values_to =</span> <span class="st">"Log_Posterior"</span>)</span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-23"><a href="#cb11-23" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Visualisation avec ggplot2</span></span>
+<span id="cb11-24"><a href="#cb11-24" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(lp_long, <span class="fu">aes</span>(<span class="at">x =</span> Iteration, <span class="at">y =</span> Log_Posterior, <span class="at">color =</span> Chaine)) <span class="sc">+</span></span>
+<span id="cb11-25"><a href="#cb11-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">alpha =</span> <span class="fl">0.8</span>) <span class="sc">+</span></span>
+<span id="cb11-26"><a href="#cb11-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb11-27"><a href="#cb11-27" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb11-28"><a href="#cb11-28" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Utilisation de scale_color_manual pour définir manuellement les couleurs</span></span>
+<span id="cb11-29"><a href="#cb11-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_color_manual</span>(</span>
+<span id="cb11-30"><a href="#cb11-30" aria-hidden="true" tabindex="-1"></a>    <span class="at">values =</span> <span class="fu">c</span>(</span>
+<span id="cb11-31"><a href="#cb11-31" aria-hidden="true" tabindex="-1"></a>      <span class="st">"Chaine_1"</span> <span class="ot">=</span> <span class="st">"red"</span>, <span class="st">"Chaine_2"</span> <span class="ot">=</span> <span class="st">"blue"</span>,      </span>
+<span id="cb11-32"><a href="#cb11-32" aria-hidden="true" tabindex="-1"></a>      <span class="st">"Chaine_3"</span> <span class="ot">=</span> <span class="st">"darkgreen"</span>, <span class="st">"Chaine_4"</span> <span class="ot">=</span> <span class="st">"orange"</span>,  <span class="st">"Chaine_5"</span> <span class="ot">=</span> <span class="st">"purple"</span> ),</span>
+<span id="cb11-33"><a href="#cb11-33" aria-hidden="true" tabindex="-1"></a>    <span class="at">labels =</span> <span class="fu">paste</span>(<span class="st">"Chaîne"</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>) <span class="co"># Mise à jour des noms affichés dans la légende</span></span>
+<span id="cb11-34"><a href="#cb11-34" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb11-35"><a href="#cb11-35" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb11-36"><a href="#cb11-36" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Configuration des étiquettes et du titre du graphique</span></span>
+<span id="cb11-37"><a href="#cb11-37" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb11-38"><a href="#cb11-38" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Évolution de la Log-Posteriori (Diagnostics HMC)"</span>,</span>
+<span id="cb11-39"><a href="#cb11-39" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"Comparaison de la convergence des 5 chaînes MCMC"</span>,</span>
+<span id="cb11-40"><a href="#cb11-40" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Itérations"</span>,<span class="at">y =</span> <span class="st">"Log-Posterior"</span>,<span class="at">color =</span> <span class="st">"Légende"</span></span>
+<span id="cb11-41"><a href="#cb11-41" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb11-42"><a href="#cb11-42" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb11-43"><a href="#cb11-43" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Personnalisation esthétique du thème</span></span>
+<span id="cb11-44"><a href="#cb11-44" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(</span>
+<span id="cb11-45"><a href="#cb11-45" aria-hidden="true" tabindex="-1"></a>    <span class="at">legend.position =</span> <span class="st">"right"</span>,</span>
+<span id="cb11-46"><a href="#cb11-46" aria-hidden="true" tabindex="-1"></a>    <span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">face =</span> <span class="st">"bold"</span>, <span class="at">size =</span> <span class="dv">14</span>),</span>
+<span id="cb11-47"><a href="#cb11-47" aria-hidden="true" tabindex="-1"></a>    <span class="at">panel.grid.minor =</span> <span class="fu">element_blank</span>()</span>
+<span id="cb11-48"><a href="#cb11-48" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Part2_1_files/figure-html/unnamed-chunk-9-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>La figure montre une convergence rapide des cinq chaînes vers une même zone de forte densité. Leur superposition indique un excellent mélange et une exploration efficace de l’espace des paramètres.</p>
+<p>La stabilité des trajectoires confirme que la phase de chauffe (<em>burn-in</em>) est suffisante et que les estimations postérieures obtenues sont fiables.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ---------------------------------------------------------</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="co">#                   Main run 1 chain </span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="co"># ---------------------------------------------------------</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>n_chains <span class="ot">&lt;-</span> <span class="dv">1</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>n_iter   <span class="ot">&lt;-</span> <span class="dv">5000</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>eps      <span class="ot">&lt;-</span> <span class="fl">0.02</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>L        <span class="ot">&lt;-</span> <span class="dv">100</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>all_results <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>n_chains) {</span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>  start_time <span class="ot">&lt;-</span> <span class="fu">Sys.time</span>()</span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>  all_results[[i]] <span class="ot">&lt;-</span> <span class="fu">run_chain</span>(i, n_iter, Y, J, eps, L)</span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>  end_time <span class="ot">&lt;-</span> <span class="fu">Sys.time</span>()</span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"Chaîne %d terminée en %.2f minutes.</span><span class="sc">\n</span><span class="st">"</span>, i, <span class="fu">as.numeric</span>(end_time <span class="sc">-</span> start_time, <span class="at">units=</span><span class="st">"mins"</span>)))</span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Exécution de la Chaîne 1...
+  Chaîne 1 | Progression : 1250 / 5000 (25%) | Taux d'acc. : 99.2%
+  Chaîne 1 | Progression : 2500 / 5000 (50%) | Taux d'acc. : 98.9%
+  Chaîne 1 | Progression : 3750 / 5000 (75%) | Taux d'acc. : 98.7%
+  Chaîne 1 | Progression : 5000 / 5000 (100%) | Taux d'acc. : 98.5%
+=&gt; Chaîne 1 terminée avec succès. Taux d'acceptation final : 98.46%
+Chaîne 1 terminée en 0.05 minutes.</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow=</span><span class="fu">c</span>(<span class="dv">2</span>,<span class="dv">2</span>))</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Diagnostic de la Chaîne 1 : Analyse du Burn-in et de l'Autocorrélation</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>chaine <span class="ot">&lt;-</span> all_results[[<span class="dv">1</span>]]<span class="sc">$</span>lp</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>chaine_after_burnin <span class="ot">&lt;-</span> all_results[[<span class="dv">1</span>]]<span class="sc">$</span>lp[<span class="dv">1001</span><span class="sc">:</span><span class="dv">5000</span>]</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Tracé de la trajectoire (Traceplot) de la Log-Posterior</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(chaine, <span class="at">type=</span><span class="st">"l"</span>, <span class="at">col=</span><span class="st">"red"</span>, </span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>     <span class="at">main=</span><span class="st">"Log-Posterior: Full vs Post-Burn-in"</span>, </span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab=</span><span class="st">"Iteration"</span>, <span class="at">ylab=</span><span class="st">"Log-Probability"</span>)</span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a><span class="fu">lines</span>(<span class="dv">1001</span><span class="sc">:</span><span class="dv">5000</span>, chaine_after_burnin, <span class="at">col=</span><span class="st">"darkorange"</span>, <span class="at">lwd=</span><span class="fl">1.5</span>)</span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Histogramme de la distribution de la Log-Posterior</span></span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(chaine,<span class="at">col=</span><span class="st">"darkblue"</span>)</span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Analyse de l'autocorrélation avant Burn-in</span></span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a><span class="fu">acf</span>(chaine, <span class="at">main=</span><span class="st">"Avant Burn-In (Chain 1)"</span>)</span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Analyse de l'autocorrélation après Burn-in</span></span>
+<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a><span class="fu">acf</span>(chaine_after_burnin, <span class="at">main=</span><span class="st">"Apres Burn-In (Chain 1)"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Part2_1_files/figure-html/unnamed-chunk-11-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>L’analyse de la fonction d’autocorrélation (ACF) montre une diminution rapide de la corrélation entre les itérations successives. Après quelques lags, l’autocorrélation devient négligeable, indiquant que les échantillons générés sont quasiment indépendants.</p>
+<p>Cette propriété témoigne de l’efficacité de l’algorithme HMC, qui permet une exploration plus rapide de l’espace des paramètres que les méthodes MCMC classiques. De plus, la stabilité observée après la phase de <em>burn-in</em> confirme que les échantillons utilisés pour l’inférence proviennent bien d’une distribution stationnaire.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Plots</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow=</span><span class="fu">c</span>(<span class="dv">2</span>,<span class="dv">2</span>))</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Visualisation des paramètres globaux (Mu et Sigma) - Chaîne 1</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="co"># --- ANALYSE DE MU (Moyenne globale des log-intensités) ---</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>mu_trace <span class="ot">&lt;-</span> all_results[[<span class="dv">1</span>]]<span class="sc">$</span>mu</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(mu_trace, <span class="at">type=</span><span class="st">"l"</span> ,<span class="at">col=</span><span class="st">"darkcyan"</span>, <span class="at">main=</span><span class="st">"Traceplot mu"</span>)</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(mu_trace, <span class="at">col=</span><span class="st">"darkcyan"</span>,<span class="at">main=</span><span class="st">"Posterior mu"</span>)</span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a><span class="co"># --- ANALYSE DE SIGMA (Écart-type de la variabilité interannuelle) ---</span></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>sigma_trace <span class="ot">&lt;-</span> all_results[[<span class="dv">1</span>]]<span class="sc">$</span>sigma</span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(sigma_trace, <span class="at">type=</span><span class="st">"l"</span>,<span class="at">col=</span><span class="st">"darkblue"</span>, <span class="at">main=</span><span class="st">"Traceplot sigma"</span>)</span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(sigma_trace,<span class="at">col=</span><span class="st">"darkblue"</span>, <span class="at">main=</span><span class="st">"Posterior sigma"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Part2_1_files/figure-html/unnamed-chunk-12-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Visualisation des paramètres latents Zi</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow=</span><span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>))</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Récupération de la trace des paramètres Z pour la première chaîne</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>Z_trace <span class="ot">&lt;-</span> all_results[[<span class="dv">1</span>]]<span class="sc">$</span>Z</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Nuage de points (Scatter plot) de tous les Z cumulés</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(Z_trace, <span class="at">type=</span><span class="st">"p"</span>,<span class="at">col=</span><span class="st">"darkorange"</span>, <span class="at">main=</span><span class="st">"Traceplot Z"</span>)</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Histogramme global de la distribution des Z</span></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(Z_trace,<span class="at">col =</span> <span class="st">"darkorange"</span>, <span class="at">main=</span><span class="st">"Posterior Z"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Part2_1_files/figure-html/unnamed-chunk-13-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Transformation des paramètres et construction de la matrice finale</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="co"># ------------------------------------------------------------------------------</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Conversion des log-intensités (Z) en intensités réelles (Lambda)</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="co"># On applique la fonction exponentielle pour revenir à l'échelle naturelle</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>Z_samples <span class="ot">&lt;-</span> Z_trace</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>λ_samples <span class="ot">&lt;-</span> <span class="fu">exp</span>(Z_samples)</span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Regroupement des Lambda (12 colonnes), de Mu et de Sigma</span></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>samples_matrix <span class="ot">&lt;-</span> <span class="fu">cbind</span>(λ_samples, mu_trace, sigma_trace )</span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>n_l <span class="ot">&lt;-</span> <span class="fu">ncol</span>(λ_samples)</span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(samples_matrix) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fu">paste0</span>(<span class="st">"λ"</span>, <span class="dv">1</span><span class="sc">:</span>n_l), <span class="st">"μ"</span>, <span class="st">"σ^2"</span>)</span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(<span class="fu">round</span>(samples_matrix,<span class="dv">5</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>          λ1      λ2      λ3      λ4      λ5      λ6       λ7      λ8      λ9
+[1,] 2.17583 1.54741 3.42926 2.71449 3.79049 3.79115 10.06495 4.76428 7.65873
+[2,] 1.32318 0.79728 0.90263 1.44156 3.80469 3.04311 10.28150 4.54020 8.26568
+[3,] 3.00040 3.68854 3.37778 1.52329 2.70230 3.95543 10.53657 4.46155 8.39005
+[4,] 2.85303 1.65963 1.40959 1.37263 1.42587 2.47779  9.53242 4.83528 8.07520
+[5,] 3.19667 2.90168 3.52401 0.94596 1.34644 4.15175 11.45194 4.47669 7.99076
+[6,] 2.64586 1.30821 0.80180 2.18221 3.83612 3.16682  9.47452 4.32435 7.72265
+          λ10     λ11     λ12     λ13       μ     σ^2
+[1,] 27.06473 6.55422 6.54379 3.35530 1.43551 0.74638
+[2,] 26.69840 7.59769 8.08469 2.47053 1.41700 1.09658
+[3,] 25.56154 8.00237 5.71220 2.24972 1.34875 0.86834
+[4,] 22.06601 7.12903 7.28081 2.20411 1.64465 1.30605
+[5,] 25.12336 6.83010 6.22600 2.83137 1.29732 1.30109
+[6,] 26.56112 6.59239 8.32834 2.72348 1.44710 1.27924</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Visualisation des distributions postérieures pour chaque Lambda (Années 1-12)</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="co"># ------------------------------------------------------------------------------</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow=</span><span class="fu">c</span>(<span class="dv">3</span>, <span class="dv">4</span>), <span class="at">mar=</span><span class="fu">c</span>(<span class="dv">4</span>, <span class="dv">4</span>, <span class="dv">2</span>, <span class="dv">1</span>)) </span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Détermination du nombre de paramètres lambda</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>n_lambda <span class="ot">&lt;-</span> <span class="fu">ncol</span>(λ_samples) </span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Boucle pour générer les histogrammes (après exclusion de la période de burn-in)</span></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>burn_in <span class="ot">&lt;-</span> <span class="dv">1001</span></span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>n_lambda) {</span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">hist</span>(λ_samples[burn_in<span class="sc">:</span>n_iter, i], </span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>       <span class="at">breaks =</span> <span class="dv">30</span>, </span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>       <span class="at">col =</span> <span class="st">"skyblue"</span>, </span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>       <span class="at">border =</span> <span class="st">"white"</span>,</span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a>       <span class="at">main =</span> <span class="fu">paste</span>(<span class="st">"Posterior"</span>, <span class="fu">colnames</span>(samples_matrix)[i]),</span>
+<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a>       <span class="at">xlab =</span> <span class="fu">expression</span>(lambda),</span>
+<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a>       <span class="at">ylab =</span> <span class="st">"Nombre"</span>)</span>
+<span id="cb19-18"><a href="#cb19-18" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb19-19"><a href="#cb19-19" aria-hidden="true" tabindex="-1"></a> <span class="co"># Ajout d'une ligne verticale pour représenter la moyenne (Mean)</span></span>
+<span id="cb19-20"><a href="#cb19-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">abline</span>(<span class="at">v =</span> <span class="fu">mean</span>(λ_samples[burn_in<span class="sc">:</span>n_iter, i]), <span class="at">col =</span> <span class="st">"red"</span>, <span class="at">lwd =</span> <span class="dv">2</span>)</span>
+<span id="cb19-21"><a href="#cb19-21" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Part2_1_files/figure-html/unnamed-chunk-15-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Réinitialisation de la disposition graphique par défaut (1x1)</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow=</span><span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Part2_1_files/figure-html/unnamed-chunk-15-2.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Les distributions postérieures des paramètres <span class="math inline">\(\lambda_1\)</span> à <span class="math inline">\(\lambda_{12}\)</span> montrent une augmentation progressive de l’intensité de présence du moustique tigre au cours du temps. Les estimations passent d’une faible valeur initiale (<span class="math inline">\(\lambda_1 \approx 2,5\)</span>) à un niveau beaucoup plus élevé vers l’année 10 (<span class="math inline">\(\lambda_{10} \approx 26,5\)</span>), mettant en évidence une forte variabilité inter-annuelle.</p>
+<p>Par ailleurs, les distributions deviennent plus concentrées au fil des années, ce qui traduit une diminution de l’incertitude et une amélioration de la précision des estimations grâce à des données plus abondantes.</p>
+</section>
+<section id="estimateurs-ponctuels-et-des-intervalles-de-confiances-pour-chaque-parametre" class="level1" data-number="7">
+<h1 data-number="7"><span class="header-section-number">7</span> Estimateurs ponctuels et des intervalles de confiances pour chaque parametre</h1>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Eliminer 1000 premiere ligne </span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>clean_samples <span class="ot">&lt;-</span> samples_matrix[<span class="dv">1001</span><span class="sc">:</span><span class="dv">5000</span>, ]</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 1.Posterior Mean)</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>post_mean <span class="ot">&lt;-</span> <span class="fu">colMeans</span>(clean_samples)</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Interval de confiances 95% (95% Credible Interval)</span></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>post_ci <span class="ot">&lt;-</span> <span class="fu">apply</span>(clean_samples, <span class="dv">2</span>, quantile, <span class="at">probs =</span> <span class="fu">c</span>(<span class="fl">0.025</span>, <span class="fl">0.975</span>))</span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Met dans un tableau </span></span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>results <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">Parameter =</span> <span class="fu">colnames</span>(clean_samples),</span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">Estimate =</span> post_mean,</span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">CI_lower =</span> post_ci[<span class="dv">1</span>, ],</span>
+<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">CI_upper =</span> post_ci[<span class="dv">2</span>, ]</span>
+<span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb21-17"><a href="#cb21-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-18"><a href="#cb21-18" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(results)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>    Parameter   Estimate   CI_lower  CI_upper
+λ1         λ1  2.5840567  0.7102412  5.875979
+λ2         λ2  1.9559413  0.3854610  4.905883
+λ3         λ3  1.9548799  0.4137098  4.706506
+λ4         λ4  1.5728169  0.4206321  3.504243
+λ5         λ5  2.3465125  0.8022723  4.686968
+λ6         λ6  3.4393435  2.0378322  5.130146
+λ7         λ7 10.3111392  8.0858411 12.844453
+λ8         λ8  5.2771550  3.9088180  6.824143
+λ9         λ9  8.4817925  6.8570452 10.219580
+λ10       λ10 26.7008255 24.1433423 29.481854
+λ11       λ11  7.1658183  5.8921874  8.600457
+λ12       λ12  6.8585157  5.7313904  8.088596
+λ13       λ13  2.1329726  1.0963127  3.431706
+μ           μ  1.3552806  0.7246796  1.923366
+σ^2       σ^2  0.9926103  0.6394064  1.529252</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="co"># ------------------------------------------------------------------------------</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 7. Création du Forest Plot (Adapté à vos noms de colonnes)</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a><span class="co"># ------------------------------------------------------------------------------</span></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Préparation de l'ordre des paramètres</span></span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a><span class="co"># On utilise 'Parameter' car c'est le nom dans votre tableau results</span></span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>results<span class="sc">$</span>Parameter <span class="ot">&lt;-</span> <span class="fu">factor</span>(results<span class="sc">$</span>Parameter, <span class="at">levels =</span> <span class="fu">rev</span>(results<span class="sc">$</span>Parameter))</span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Génération du graphique Forest Plot</span></span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(results, <span class="fu">aes</span>(<span class="at">x =</span> Parameter, <span class="at">y =</span> Estimate)) <span class="sc">+</span></span>
+<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Barres d'erreur (on utilise CI_lower et CI_upper de votre tableau)</span></span>
+<span id="cb23-15"><a href="#cb23-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_errorbar</span>(<span class="fu">aes</span>(<span class="at">ymin =</span> CI_lower, <span class="at">ymax =</span> CI_upper), </span>
+<span id="cb23-16"><a href="#cb23-16" aria-hidden="true" tabindex="-1"></a>                <span class="at">width =</span> <span class="fl">0.2</span>, </span>
+<span id="cb23-17"><a href="#cb23-17" aria-hidden="true" tabindex="-1"></a>                <span class="at">color =</span> <span class="st">"#E44A33"</span>, <span class="co"># Le rouge de l'image</span></span>
+<span id="cb23-18"><a href="#cb23-18" aria-hidden="true" tabindex="-1"></a>                <span class="at">size =</span> <span class="fl">0.8</span>) <span class="sc">+</span> </span>
+<span id="cb23-19"><a href="#cb23-19" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb23-20"><a href="#cb23-20" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Points de la moyenne (on utilise Estimate de votre tableau)</span></span>
+<span id="cb23-21"><a href="#cb23-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="dv">3</span>, <span class="at">color =</span> <span class="st">"#2C3E50"</span>) <span class="sc">+</span> </span>
+<span id="cb23-22"><a href="#cb23-22" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb23-23"><a href="#cb23-23" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Inversion des axes pour l'effet horizontal</span></span>
+<span id="cb23-24"><a href="#cb23-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_flip</span>() <span class="sc">+</span> </span>
+<span id="cb23-25"><a href="#cb23-25" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb23-26"><a href="#cb23-26" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Style visuel</span></span>
+<span id="cb23-27"><a href="#cb23-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_light</span>() <span class="sc">+</span></span>
+<span id="cb23-28"><a href="#cb23-28" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb23-29"><a href="#cb23-29" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Titres en français</span></span>
+<span id="cb23-30"><a href="#cb23-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb23-31"><a href="#cb23-31" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Variabilité Inter-Annuelle des Occurrences (Paramètres λ)"</span>,</span>
+<span id="cb23-32"><a href="#cb23-32" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"Moyenne a posteriori et Intervalles de crédibilité à 95%"</span>,</span>
+<span id="cb23-33"><a href="#cb23-33" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Effet aléatoire (Année)"</span>,</span>
+<span id="cb23-34"><a href="#cb23-34" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Nombre moyen d'occurrences estimé (λ)"</span></span>
+<span id="cb23-35"><a href="#cb23-35" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb23-36"><a href="#cb23-36" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb23-37"><a href="#cb23-37" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Esthétique du texte</span></span>
+<span id="cb23-38"><a href="#cb23-38" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(</span>
+<span id="cb23-39"><a href="#cb23-39" aria-hidden="true" tabindex="-1"></a>    <span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">face =</span> <span class="st">"bold"</span>, <span class="at">size =</span> <span class="dv">14</span>, <span class="at">hjust =</span> <span class="dv">0</span>),</span>
+<span id="cb23-40"><a href="#cb23-40" aria-hidden="true" tabindex="-1"></a>    <span class="at">plot.subtitle =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">11</span>, <span class="at">color =</span> <span class="st">"grey30"</span>),</span>
+<span id="cb23-41"><a href="#cb23-41" aria-hidden="true" tabindex="-1"></a>    <span class="at">panel.grid.minor =</span> <span class="fu">element_blank</span>(),</span>
+<span id="cb23-42"><a href="#cb23-42" aria-hidden="true" tabindex="-1"></a>    <span class="at">axis.text.y =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">10</span>, <span class="at">face =</span> <span class="st">"italic"</span>),</span>
+<span id="cb23-43"><a href="#cb23-43" aria-hidden="true" tabindex="-1"></a>    <span class="at">axis.title =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">12</span>)</span>
+<span id="cb23-44"><a href="#cb23-44" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Part2_1_files/figure-html/unnamed-chunk-17-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Les estimations a posteriori des paramètres <span class="math inline">\(\lambda_i\)</span> montrent une augmentation marquée de l’intensité de présence du moustique tigre au cours du temps. Une transition nette apparaît entre les premières années (<span class="math inline">\(\lambda &lt; 5\)</span>) et les années 7 à 10, caractérisées par une forte croissance de l’abondance.</p>
+<p>L’année 10 se distingue par une estimation particulièrement élevée (<span class="math inline">\(\hat{\lambda}_{10} \approx 26,6\)</span>), influencée par l’observation d’un site ayant enregistré un nombre exceptionnel de moustiques. Malgré cette valeur extrême, le modèle hiérarchique fournit une estimation stable grâce au partage d’information entre les années.</p>
+<p>Les intervalles de crédibilité à 95 % permettent d’évaluer l’incertitude des estimations. Les premières années présentent des intervalles plus larges, tandis que les années récentes bénéficient d’estimations plus précises, reflétant la disponibilité de données plus abondantes et une meilleure confiance statistique.</p>
+</section>
+<section id="analyser-la-qualité-prédictive-du-modèle." class="level1" data-number="8">
+<h1 data-number="8"><span class="header-section-number">8</span> Analyser la qualité prédictive du modèle.</h1>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Création de y_list : chaque élément de la liste est un vecteur contenant </span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="co"># le nombre d'occurrences (moustiques) par province pour chaque année.</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>y_list <span class="ot">&lt;-</span> <span class="fu">split</span>(df<span class="sc">$</span>n_occurrences, df<span class="sc">$</span>i)</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Extraction des résultats de la Chaîne 1 (MCMC)</span></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>res_chain1 <span class="ot">&lt;-</span> all_results[[<span class="dv">1</span>]]</span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Élimination de la période de chauffe (burn-in, ex: 1000 premières itérations)</span></span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>burn_in <span class="ot">&lt;-</span> <span class="dv">1001</span></span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>n_iter_total <span class="ot">&lt;-</span> <span class="fu">length</span>(res_chain1<span class="sc">$</span>mu)</span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a>indices_kept <span class="ot">&lt;-</span> burn_in<span class="sc">:</span>n_iter_total</span>
+<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Création d'un dataframe contenant les valeurs de lambda_i (exp(Z_i))</span></span>
+<span id="cb24-14"><a href="#cb24-14" aria-hidden="true" tabindex="-1"></a><span class="co"># On transforme les échantillons de Z (espace log) en intensité réelle (lambda)</span></span>
+<span id="cb24-15"><a href="#cb24-15" aria-hidden="true" tabindex="-1"></a>lambda_samples <span class="ot">&lt;-</span> <span class="fu">exp</span>(res_chain1<span class="sc">$</span>Z[indices_kept, ])</span>
+<span id="cb24-16"><a href="#cb24-16" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(lambda_samples) <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">"lambda_"</span>, <span class="dv">1</span><span class="sc">:</span><span class="fu">ncol</span>(lambda_samples))</span>
+<span id="cb24-17"><a href="#cb24-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-18"><a href="#cb24-18" aria-hidden="true" tabindex="-1"></a><span class="co"># Conversion en structure dataframe pour faciliter les analyses PPC suivantes</span></span>
+<span id="cb24-19"><a href="#cb24-19" aria-hidden="true" tabindex="-1"></a>samples_df <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(lambda_samples)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="co"># --- 1. Préparation des données observées (Réalité) ---</span></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>y_obs <span class="ot">&lt;-</span> <span class="fu">unlist</span>(y_list) <span class="co"># Liste des occurrences observées par an</span></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>stat_obs_zero <span class="ot">&lt;-</span> <span class="fu">mean</span>(y_obs <span class="sc">==</span> <span class="dv">0</span>) <span class="co"># Proportion réelle de zéros</span></span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>stat_obs_max  <span class="ot">&lt;-</span> <span class="fu">max</span>(y_obs)       <span class="co"># Valeur maximale réelle observée</span></span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a><span class="co"># --- 2. Configuration de la simulation ---</span></span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>n_samples_ppc <span class="ot">&lt;-</span> <span class="dv">1000</span> </span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">42</span>) <span class="co"># Pour la reproductibilité</span></span>
+<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a>indices_ppc <span class="ot">&lt;-</span> <span class="fu">sample</span>(<span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(samples_df), n_samples_ppc)</span>
+<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a>rep_stat_zero <span class="ot">&lt;-</span> <span class="fu">numeric</span>(n_samples_ppc)</span>
+<span id="cb25-14"><a href="#cb25-14" aria-hidden="true" tabindex="-1"></a>rep_stat_max  <span class="ot">&lt;-</span> <span class="fu">numeric</span>(n_samples_ppc)</span>
+<span id="cb25-15"><a href="#cb25-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-16"><a href="#cb25-16" aria-hidden="true" tabindex="-1"></a>I <span class="ot">&lt;-</span> <span class="fu">length</span>(y_list) <span class="co"># Nombre d'années (12)</span></span>
+<span id="cb25-17"><a href="#cb25-17" aria-hidden="true" tabindex="-1"></a>J_list <span class="ot">&lt;-</span> <span class="fu">sapply</span>(y_list, length) <span class="co"># Nombre de sites par année</span></span>
+<span id="cb25-18"><a href="#cb25-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-19"><a href="#cb25-19" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Génération des données prédictives a posteriori en cours...</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Génération des données prédictives a posteriori en cours...</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co"># --- 3. Boucle de simulation des données répliquées (y_rep) ---</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (t <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>n_samples_ppc) {</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>    idx <span class="ot">&lt;-</span> indices_ppc[t]</span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>    y_rep_t <span class="ot">&lt;-</span> <span class="fu">numeric</span>(<span class="dv">0</span>)</span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>I) {</span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Extraction du lambda pour l'année i à l'itération t</span></span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>        lambda_i_t <span class="ot">&lt;-</span> samples_df[idx, <span class="fu">paste0</span>(<span class="st">"lambda_"</span>, i)]</span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Simulation de nouvelles observations selon la loi de Poisson</span></span>
+<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>        <span class="co"># J_list[i] représente l'effort d'échantillonnage de l'année i</span></span>
+<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a>        y_rep_t <span class="ot">&lt;-</span> <span class="fu">c</span>(y_rep_t, <span class="fu">rpois</span>(J_list[i], <span class="at">lambda =</span> lambda_i_t))</span>
+<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb27-14"><a href="#cb27-14" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb27-15"><a href="#cb27-15" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Calcul des statistiques sur les données simulées</span></span>
+<span id="cb27-16"><a href="#cb27-16" aria-hidden="true" tabindex="-1"></a>    rep_stat_zero[t] <span class="ot">&lt;-</span> <span class="fu">mean</span>(y_rep_t <span class="sc">==</span> <span class="dv">0</span>)</span>
+<span id="cb27-17"><a href="#cb27-17" aria-hidden="true" tabindex="-1"></a>    rep_stat_max[t]  <span class="ot">&lt;-</span> <span class="fu">max</span>(y_rep_t)</span>
+<span id="cb27-18"><a href="#cb27-18" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb27-19"><a href="#cb27-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-20"><a href="#cb27-20" aria-hidden="true" tabindex="-1"></a><span class="co"># --- 4. Calcul des P-values bayésiennes ---</span></span>
+<span id="cb27-21"><a href="#cb27-21" aria-hidden="true" tabindex="-1"></a><span class="co"># Si la p-value est proche de 0.5, le modèle est bien ajusté.</span></span>
+<span id="cb27-22"><a href="#cb27-22" aria-hidden="true" tabindex="-1"></a>p_val_zero <span class="ot">&lt;-</span> <span class="fu">mean</span>(rep_stat_zero <span class="sc">&gt;=</span> stat_obs_zero)</span>
+<span id="cb27-23"><a href="#cb27-23" aria-hidden="true" tabindex="-1"></a>p_val_max  <span class="ot">&lt;-</span> <span class="fu">mean</span>(rep_stat_max <span class="sc">&gt;=</span> stat_obs_max)</span>
+<span id="cb27-24"><a href="#cb27-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-25"><a href="#cb27-25" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"P-value bayésienne (Proportion de zéros) : %.3f</span><span class="sc">\n</span><span class="st">"</span>, p_val_zero))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>P-value bayésienne (Proportion de zéros) : 1.000</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"P-value bayésienne (Maximum observé) : %.3f</span><span class="sc">\n</span><span class="st">"</span>, p_val_max))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>P-value bayésienne (Maximum observé) : 0.000</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="co"># --- 5. Visualisation graphique ---</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>ppc_long <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">Valeur =</span> <span class="fu">c</span>(rep_stat_zero, rep_stat_max),</span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">Statistique =</span> <span class="fu">rep</span>(<span class="fu">c</span>(<span class="st">"1. Proportion de sites sans moustiques (Zéro)"</span>, </span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>                        <span class="st">"2. Pire Invasion (Maximum observé)"</span>), </span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>                      <span class="at">each =</span> n_samples_ppc)</span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a>obs_lines <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">Valeur_obs =</span> <span class="fu">c</span>(stat_obs_zero, stat_obs_max),</span>
+<span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">Statistique =</span> <span class="fu">c</span>(<span class="st">"1. Proportion de sites sans moustiques (Zéro)"</span>, </span>
+<span id="cb31-12"><a href="#cb31-12" aria-hidden="true" tabindex="-1"></a>                    <span class="st">"2. Pire Invasion (Maximum observé)"</span>)</span>
+<span id="cb31-13"><a href="#cb31-13" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb31-14"><a href="#cb31-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-15"><a href="#cb31-15" aria-hidden="true" tabindex="-1"></a>ppc_plot <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(ppc_long, <span class="fu">aes</span>(<span class="at">x =</span> Valeur)) <span class="sc">+</span></span>
+<span id="cb31-16"><a href="#cb31-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_histogram</span>(<span class="at">fill =</span> <span class="st">"#95A5A6"</span>, <span class="at">color =</span> <span class="st">"white"</span>, <span class="at">bins =</span> <span class="dv">30</span>, <span class="at">alpha =</span> <span class="fl">0.8</span>) <span class="sc">+</span></span>
+<span id="cb31-17"><a href="#cb31-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_vline</span>(<span class="at">data =</span> obs_lines, <span class="fu">aes</span>(<span class="at">xintercept =</span> Valeur_obs), </span>
+<span id="cb31-18"><a href="#cb31-18" aria-hidden="true" tabindex="-1"></a>               <span class="at">color =</span> <span class="st">"#E74C3C"</span>, <span class="at">linewidth =</span> <span class="fl">1.2</span>, <span class="at">linetype =</span> <span class="st">"dashed"</span>) <span class="sc">+</span></span>
+<span id="cb31-19"><a href="#cb31-19" aria-hidden="true" tabindex="-1"></a>    <span class="fu">facet_wrap</span>(<span class="sc">~</span> Statistique, <span class="at">scales =</span> <span class="st">"free"</span>) <span class="sc">+</span></span>
+<span id="cb31-20"><a href="#cb31-20" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb31-21"><a href="#cb31-21" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(</span>
+<span id="cb31-22"><a href="#cb31-22" aria-hidden="true" tabindex="-1"></a>        <span class="at">title =</span> <span class="st">"Vérification Prédictive a Posteriori (PPC)"</span>,</span>
+<span id="cb31-23"><a href="#cb31-23" aria-hidden="true" tabindex="-1"></a>        <span class="at">subtitle =</span> <span class="st">"L'histogramme gris représente les prédictions du modèle. La ligne rouge est la réalité observée."</span>,</span>
+<span id="cb31-24"><a href="#cb31-24" aria-hidden="true" tabindex="-1"></a>        <span class="at">x =</span> <span class="st">"Valeur de la statistique"</span>,</span>
+<span id="cb31-25"><a href="#cb31-25" aria-hidden="true" tabindex="-1"></a>        <span class="at">y =</span> <span class="st">"Fréquence"</span></span>
+<span id="cb31-26"><a href="#cb31-26" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">+</span></span>
+<span id="cb31-27"><a href="#cb31-27" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme</span>(</span>
+<span id="cb31-28"><a href="#cb31-28" aria-hidden="true" tabindex="-1"></a>        <span class="at">strip.background =</span> <span class="fu">element_rect</span>(<span class="at">fill =</span> <span class="st">"#EFEFEF"</span>, <span class="at">color =</span> <span class="cn">NA</span>),</span>
+<span id="cb31-29"><a href="#cb31-29" aria-hidden="true" tabindex="-1"></a>        <span class="at">strip.text =</span> <span class="fu">element_text</span>(<span class="at">face =</span> <span class="st">"bold"</span>, <span class="at">size =</span> <span class="dv">10</span>)</span>
+<span id="cb31-30"><a href="#cb31-30" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb31-31"><a href="#cb31-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-32"><a href="#cb31-32" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(ppc_plot)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Part2_1_files/figure-html/unnamed-chunk-19-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Les résultats montrent que le modèle tend à légèrement surestimer le nombre de sites sans moustiques, ce qui suggère une surestimation modérée de la probabilité d’absence. Cette différence peut être liée aux limites de la loi de Poisson pour représenter des données très dispersées.</p>
+<p>Par ailleurs, le modèle sous-estime les événements extrêmes. La valeur maximale observée (252 moustiques) est largement supérieure aux valeurs simulées, indiquant qu’un épisode exceptionnel n’est pas entièrement capturé par le modèle.</p>
+<p>Malgré cette limite, le modèle reproduit correctement la tendance générale et la variabilité inter-annuelle de l’invasion du moustique tigre.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<div style="text-align:center; font-size:0.85em; color:#888; padding:25px;">
+  <strong>© 2026 NGUYEN Duc Hoang Viet &amp; Tchanang Yvan Michel — Tous droits réservés.</strong><br>
+  <strong>Université de Lille — Projet Modèle hiérarchique bayésien pour l’écologie<strong><br>
+  Toute reproduction, diffusion ou utilisation sans autorisation est interdite.
+</strong></strong></div><strong><strong>
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</strong></strong></div><strong><strong> <!-- /content -->
+
+
+
+
+</strong></strong></body></html>

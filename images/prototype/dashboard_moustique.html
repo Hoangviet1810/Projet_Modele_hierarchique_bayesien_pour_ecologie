@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Dashboard — Moustique Tigre · Modèle Bayésien</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;800&family=JetBrains+Mono:wght@300;400;500&display=swap');
+
+  :root {
+    --bg:       #0b0e14;
+    --surface:  #111520;
+    --border:   #1e2535;
+    --accent1:  #00e5ff;
+    --accent2:  #ff5370;
+    --accent3:  #c3e88d;
+    --accent4:  #ffcb6b;
+    --text:     #e2e8f0;
+    --muted:    #5a6580;
+    --glow1:    rgba(0,229,255,.15);
+    --glow2:    rgba(255,83,112,.12);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 24px;
+    background-image:
+      radial-gradient(ellipse 60% 40% at 20% 10%, rgba(0,229,255,.05) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 35% at 80% 85%, rgba(255,83,112,.05) 0%, transparent 60%);
+  }
+
+  /* ── HEADER ── */
+  header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 28px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--border);
+  }
+  header h1 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: clamp(1.2rem, 3vw, 1.9rem);
+    letter-spacing: -.5px;
+    line-height: 1.15;
+  }
+  header h1 span { color: var(--accent1); }
+  header p {
+    font-size: .7rem;
+    color: var(--muted);
+    margin-top: 4px;
+    letter-spacing: .04em;
+  }
+  .badge {
+    font-size: .65rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--accent1);
+    border: 1px solid var(--accent1);
+    padding: 3px 10px;
+    border-radius: 2px;
+    white-space: nowrap;
+    opacity: .8;
+  }
+
+  /* ── GRID ── */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, auto);
+    gap: 16px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+    animation: fadeUp .5s ease both;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+  .card:nth-child(1)::before { background: radial-gradient(circle at 0% 0%, var(--glow1), transparent 60%); }
+  .card:nth-child(2)::before { background: radial-gradient(circle at 100% 0%, var(--glow2), transparent 60%); }
+  .card:nth-child(3)::before { background: radial-gradient(circle at 100% 100%, rgba(195,232,141,.08), transparent 60%); }
+  .card:nth-child(4)::before { background: radial-gradient(circle at 0% 100%, rgba(255,203,107,.08), transparent 60%); }
+
+  @keyframes fadeUp {
+    from { opacity:0; transform: translateY(14px); }
+    to   { opacity:1; transform: translateY(0); }
+  }
+  .card:nth-child(1) { animation-delay:.05s; }
+  .card:nth-child(2) { animation-delay:.10s; }
+  .card:nth-child(3) { animation-delay:.15s; }
+  .card:nth-child(4) { animation-delay:.20s; }
+  .card:nth-child(5) { animation-delay:.25s; }
+  .card:nth-child(6) { animation-delay:.30s; }
+  .card:nth-child(7) { animation-delay:.35s; }
+  .card:nth-child(8) { animation-delay:.40s; }
+  .card:nth-child(9) { animation-delay:.45s; }
+
+  .card-label {
+    font-size: .62rem;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .card-title {
+    font-family: 'Syne', sans-serif;
+    font-size: .95rem;
+    font-weight: 600;
+    margin-bottom: 14px;
+    color: var(--text);
+  }
+
+  /* KPI cards */
+  .kpi-val {
+    font-family: 'Syne', sans-serif;
+    font-size: 2.8rem;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -1.5px;
+  }
+  .kpi-val.cyan  { color: var(--accent1); }
+  .kpi-val.red   { color: var(--accent2); }
+  .kpi-val.green { color: var(--accent3); }
+  .kpi-val.amber { color: var(--accent4); }
+  .kpi-sub {
+    font-size: .68rem;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+  .kpi-delta {
+    display: inline-block;
+    font-size: .68rem;
+    margin-top: 8px;
+    padding: 2px 7px;
+    border-radius: 20px;
+  }
+  .kpi-delta.up   { background: rgba(195,232,141,.15); color: var(--accent3); }
+  .kpi-delta.down { background: rgba(255,83,112,.15);  color: var(--accent2); }
+
+  canvas { width: 100% !important; }
+
+  /* Forest plot (card 8) */
+  .forest { width: 100%; }
+  .fp-row {
+    display: grid;
+    grid-template-columns: 60px 1fr 50px;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 7px;
+    font-size: .65rem;
+  }
+  .fp-label { color: var(--muted); text-align: right; }
+  .fp-bar-track {
+    position: relative;
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: visible;
+  }
+  .fp-bar {
+    position: absolute;
+    height: 100%;
+    border-radius: 3px;
+    background: var(--accent1);
+    opacity: .7;
+  }
+  .fp-dot {
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent1);
+    box-shadow: 0 0 6px var(--accent1);
+    z-index: 2;
+  }
+  .fp-val { color: var(--accent1); text-align: right; }
+
+  /* Params table (card 9) */
+  table { width: 100%; border-collapse: collapse; font-size: .68rem; }
+  thead tr { border-bottom: 1px solid var(--border); }
+  th { color: var(--muted); text-align: left; padding: 4px 6px; font-weight: 400; letter-spacing: .06em; font-size: .6rem; text-transform: uppercase; }
+  td { padding: 5px 6px; color: var(--text); }
+  tr:nth-child(even) td { background: rgba(255,255,255,.02); }
+  .tag {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: .6rem;
+  }
+  .tag.base { background: rgba(0,229,255,.12); color: var(--accent1); }
+  .tag.ext  { background: rgba(195,232,141,.12); color: var(--accent3); }
+
+  /* ACF sparkline (card 6) */
+  .acf-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    height: 70px;
+    margin-top: 8px;
+  }
+  .acf-bar {
+    flex: 1;
+    border-radius: 2px 2px 0 0;
+    transition: height .4s ease;
+  }
+  .acf-axis {
+    border-top: 1px dashed var(--border);
+    margin-top: 4px;
+    padding-top: 4px;
+    display: flex;
+    justify-content: space-between;
+    font-size: .6rem;
+    color: var(--muted);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Moustique Tigre — <span>Modèle Bayésien Hiérarchique</span></h1>
+    <p>Aedes albopictus · France · 2010 – 2025 · HMC (100 000 itérations, 5 chaînes)</p>
+  </div>
+  <div class="badge">ISN · Univ. Lille · 2026</div>
+</header>
+
+<div class="grid">
+
+  <!-- CARD 1 — KPI observations -->
+  <div class="card">
+    <div class="card-label">Données brutes</div>
+    <div class="card-title">Occurrences totales</div>
+    <div class="kpi-val cyan">2 209</div>
+    <div class="kpi-sub">enregistrements GBIF</div>
+    <span class="kpi-delta up">↑ 84 groupes année×site</span>
+  </div>
+
+  <!-- CARD 2 — KPI λ max -->
+  <div class="card">
+    <div class="card-label">Effet aléatoire</div>
+    <div class="card-title">Intensité max. estimée</div>
+    <div class="kpi-val red">λ̂₁₀ = 26.6</div>
+    <div class="kpi-sub">IC 95 % : [24.0 ; 29.5]</div>
+    <span class="kpi-delta down">⚠ record observé : 252</span>
+  </div>
+
+  <!-- CARD 3 — KPI β -->
+  <div class="card">
+    <div class="card-label">Extension — Température</div>
+    <div class="card-title">Coefficient β (T2M)</div>
+    <div class="kpi-val green">β̂ = 1.302</div>
+    <div class="kpi-sub">Effet positif significatif</div>
+    <span class="kpi-delta up">↑ 0 ∉ IC crédibilité</span>
+  </div>
+
+  <!-- CARD 4 — Évolution λ (line chart) -->
+  <div class="card">
+    <div class="card-label">Inférence a posteriori</div>
+    <div class="card-title">Évolution de λ̂ᵢ (années 1–12)</div>
+    <canvas id="chartLambda" height="160"></canvas>
+  </div>
+
+  <!-- CARD 5 — Paramètres μ & σ² (grouped bar) -->
+  <div class="card">
+    <div class="card-label">Hyperparamètres</div>
+    <div class="card-title">Comparaison μ & σ² : base vs extension</div>
+    <canvas id="chartParams" height="160"></canvas>
+  </div>
+
+  <!-- CARD 6 — ACF sparkline -->
+  <div class="card">
+    <div class="card-label">Diagnostic MCMC</div>
+    <div class="card-title">ACF Log-Postérieure (chaîne 1)</div>
+    <div class="acf-bars" id="acfBars"></div>
+    <div class="acf-axis">
+      <span>Lag 0</span><span>Lag 5</span><span>Lag 10</span><span>Lag 15</span><span>Lag 35</span>
+    </div>
+    <div style="font-size:.62rem;color:var(--muted);margin-top:8px;">Décroissance rapide → échantillons quasi-indépendants après lag ≈ 15</div>
+  </div>
+
+  <!-- CARD 7 — Occurrences par région (bar horizontal) -->
+  <div class="card">
+    <div class="card-label">Répartition géographique</div>
+    <div class="card-title">Hotspots régionaux (top 6)</div>
+    <canvas id="chartRegions" height="170"></canvas>
+  </div>
+
+  <!-- CARD 8 — Forest plot IC 95% -->
+  <div class="card">
+    <div class="card-label">Intervalles de crédibilité 95 %</div>
+    <div class="card-title">Forest Plot λᵢ</div>
+    <div class="forest" id="forestPlot"></div>
+  </div>
+
+  <!-- CARD 9 — Table paramètres -->
+  <div class="card">
+    <div class="card-label">Synthèse</div>
+    <div class="card-title">Paramètres : base vs extension</div>
+    <table>
+      <thead>
+        <tr><th>Param.</th><th>Modèle</th><th>Moyenne</th><th>IC 95 %</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>μ</td><td><span class="tag base">Base</span></td><td>1.391</td><td>[0.9 ; 1.9]</td></tr>
+        <tr><td>μ</td><td><span class="tag ext">Ext.</span></td><td>1.321</td><td>[0.8 ; 1.8]</td></tr>
+        <tr><td>σ²</td><td><span class="tag base">Base</span></td><td>1.042</td><td>[0.5 ; 2.0]</td></tr>
+        <tr><td>σ²</td><td><span class="tag ext">Ext.</span></td><td>1.336</td><td>[0.7 ; 2.5]</td></tr>
+        <tr><td>β</td><td><span class="tag ext">Ext.</span></td><td>1.302</td><td>[0.9 ; 1.7]</td></tr>
+        <tr><td>λ̂₁</td><td><span class="tag base">Base</span></td><td>2.5</td><td>[0.68 ; 5.81]</td></tr>
+        <tr><td>λ̂₁₀</td><td><span class="tag base">Base</span></td><td>26.6</td><td>[24.0 ; 29.5]</td></tr>
+        <tr><td>Taux acc.</td><td><span class="tag base">HMC</span></td><td>~0.90</td><td>Burn-in : 1000</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<script>
+/* ─── palette ─── */
+const C1='#00e5ff', C2='#ff5370', C3='#c3e88d', C4='#ffcb6b';
+const SURFACE='#111520', BORDER='#1e2535', MUTED='#5a6580';
+
+Chart.defaults.color = '#5a6580';
+Chart.defaults.borderColor = BORDER;
+Chart.defaults.font.family = "'JetBrains Mono', monospace";
+Chart.defaults.font.size = 10;
+
+/* ─── CARD 4 : Lambda line ─── */
+const lambdaData = [2.5, 3.1, 2.8, 3.4, 3.9, 4.8, 7.2, 6.5, 9.1, 26.6, 8.3, 7.9];
+const lambdaIC_lo = [0.68,1.1,0.9,1.3,1.6,2.2,3.8,3.2,5.1,24.0,4.9,4.5];
+const lambdaIC_hi = [5.81,6.0,5.5,6.8,7.4,9.1,12.5,11.0,14.3,29.5,13.0,12.5];
+const years = ['Y1\n2010','Y2\n2014','Y3\n2015','Y4\n2016','Y5\n2017','Y6\n2018','Y7\n2019','Y8\n2020','Y9\n2021','Y10\n2022','Y11\n2023','Y12\n2024'];
+
+new Chart(document.getElementById('chartLambda'), {
+  type: 'line',
+  data: {
+    labels: years.map((y,i)=>`Y${i+1}`),
+    datasets: [
+      {
+        label: 'IC hi',
+        data: lambdaIC_hi,
+        fill: '+1',
+        borderWidth: 0,
+        pointRadius: 0,
+        backgroundColor: 'rgba(0,229,255,.10)',
+        tension: .4
+      },
+      {
+        label: 'IC lo',
+        data: lambdaIC_lo,
+        fill: false,
+        borderWidth: 0,
+        pointRadius: 0,
+        tension: .4
+      },
+      {
+        label: 'λ̂ᵢ (moyenne)',
+        data: lambdaData,
+        borderColor: C1,
+        backgroundColor: C1,
+        borderWidth: 2,
+        pointRadius: 3,
+        pointHoverRadius: 5,
+        tension: .4,
+        fill: false
+      }
+    ]
+  },
+  options: {
+    responsive:true,
+    plugins:{ legend:{ display:false }, tooltip:{ callbacks:{
+      label: (ctx)=> ctx.dataset.label==='λ̂ᵢ (moyenne)' ? `λ̂ = ${ctx.parsed.y}` : ''
+    }}},
+    scales:{
+      x:{ grid:{color:BORDER}, ticks:{color:MUTED, font:{size:8}}},
+      y:{ grid:{color:BORDER}, ticks:{color:MUTED, font:{size:8}}, title:{display:true,text:'λ',color:MUTED}}
+    }
+  }
+});
+
+/* ─── CARD 5 : μ & σ² grouped bar ─── */
+new Chart(document.getElementById('chartParams'), {
+  type:'bar',
+  data:{
+    labels:['μ (Moyenne globale)', 'σ² (Variance)'],
+    datasets:[
+      { label:'Modèle de base', data:[1.391, 1.042], backgroundColor:'rgba(0,229,255,.6)', borderColor:C1, borderWidth:1, borderRadius:3 },
+      { label:'Modèle extension', data:[1.321, 1.336], backgroundColor:'rgba(195,232,141,.6)', borderColor:C3, borderWidth:1, borderRadius:3 }
+    ]
+  },
+  options:{
+    responsive:true,
+    plugins:{ legend:{ labels:{ color:MUTED, font:{size:9}, boxWidth:10 }}},
+    scales:{
+      x:{ grid:{display:false}, ticks:{color:MUTED, font:{size:8}}},
+      y:{ grid:{color:BORDER}, ticks:{color:MUTED, font:{size:8}}, suggestedMax:1.8 }
+    }
+  }
+});
+
+/* ─── CARD 6 : ACF bars ─── */
+const acfVals = [1.0,.82,.65,.50,.38,.27,.20,.13,.09,.06,.03,.02,.01,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+const container = document.getElementById('acfBars');
+acfVals.forEach((v,i)=>{
+  const bar = document.createElement('div');
+  bar.className='acf-bar';
+  const pct = Math.max(0, v)*100;
+  bar.style.height = pct + '%';
+  bar.style.background = v>0.1 ? C1 : (v>0 ? 'rgba(0,229,255,.3)' : BORDER);
+  container.appendChild(bar);
+});
+
+/* ─── CARD 7 : Regions horizontal bar ─── */
+new Chart(document.getElementById('chartRegions'), {
+  type:'bar',
+  data:{
+    labels:['Rhône-Alpes','PACA','Languedoc-R.','Aquitaine','Midi-Pyrénées','Pays de Loire'],
+    datasets:[{
+      label:'Occurrences',
+      data:[125,98,72,34,21,12],
+      backgroundColor:[C2,'rgba(255,83,112,.7)','rgba(255,83,112,.55)','rgba(255,83,112,.4)','rgba(255,83,112,.3)','rgba(255,83,112,.2)'],
+      borderColor:'transparent',
+      borderRadius:3,
+      borderSkipped:false
+    }]
+  },
+  options:{
+    indexAxis:'y',
+    responsive:true,
+    plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:(c)=>`${c.parsed.x} obs.`}}},
+    scales:{
+      x:{ grid:{color:BORDER}, ticks:{color:MUTED, font:{size:8}}},
+      y:{ grid:{display:false}, ticks:{color:MUTED, font:{size:8}}}
+    }
+  }
+});
+
+/* ─── CARD 8 : Forest plot ─── */
+const fpData = [
+  {label:'λ₁',  mean:2.5,  lo:0.68, hi:5.81, max:30},
+  {label:'λ₂',  mean:3.1,  lo:1.1,  hi:6.0,  max:30},
+  {label:'λ₅',  mean:3.9,  lo:1.6,  hi:7.4,  max:30},
+  {label:'λ₇',  mean:7.2,  lo:3.8,  hi:12.5, max:30},
+  {label:'λ₉',  mean:9.1,  lo:5.1,  hi:14.3, max:30},
+  {label:'λ₁₀', mean:26.6, lo:24.0, hi:29.5, max:30},
+  {label:'λ₁₁', mean:8.3,  lo:4.9,  hi:13.0, max:30},
+  {label:'λ₁₂', mean:7.9,  lo:4.5,  hi:12.5, max:30},
+];
+const fp = document.getElementById('forestPlot');
+fpData.forEach(d=>{
+  const pct = v => Math.min(100, v/d.max*100);
+  fp.innerHTML += `
+  <div class="fp-row">
+    <div class="fp-label">${d.label}</div>
+    <div class="fp-bar-track">
+      <div class="fp-bar" style="left:${pct(d.lo)}%;width:${pct(d.hi)-pct(d.lo)}%;"></div>
+      <div class="fp-dot"  style="left:${pct(d.mean)}%;"></div>
+    </div>
+    <div class="fp-val">${d.mean}</div>
+  </div>`;
+});
+</script>
+</body>
+</html>

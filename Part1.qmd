@@ -1,13 +1,8 @@
 ---
 title: "Partie 1 Extraction des données et pré-traitement"
-author: "NGUYEN Duc Hoang Viet"
-format:
-  html:
-    theme: cosmo        # Giao diện sạch sẽ, chuyên nghiệp
-    toc: true           # Hiện mục lục bên trái/phải
-    number-sections: true # Tự động đánh số 1, 2, 3...
-    code-fold: false     # Cho phép ẩn/hiện code (rất giống Notebook)
-    embed-resources: true # Để lưu thành 1
+author: "NGUYEN Duc Hoang Viet et Tchanang Yvan Michel"
+number-sections: true 
+code-fold: false
 execute:
   warning: false
   message: false
@@ -40,9 +35,6 @@ head(tigre_moustique_data)
 # RESUME DES DONNÉES
 
 ```{r}
-# ------------------------------------------------------------------------------
-#                   RESUME DES DONNÉES
-# ------------------------------------------------------------------------------
 summary_table <- tigre_moustique_data %>%
   filter(!is.na(year), !is.na(stateProvince)) %>%  
   group_by(year, stateProvince) %>%                 
@@ -60,9 +52,6 @@ datatable(summary_table)
 # VISUALISATIONS DES DONNEES 
 
 ```{r}
-# ------------------------------------------------------------------------------
-#                  VISUALISATIONS DES DONNEES 
-# ------------------------------------------------------------------------------
 library(sf)
 library(ggplot2)
 library(maps)
@@ -127,6 +116,10 @@ ggplot() +
   )
 ```
 
+La carte montre une expansion progressive du moustique tigre en France entre 1999 et 2025. Initialement concentrées dans les régions du sud, les observations se sont progressivement étendues vers le nord, atteignant récemment la région parisienne et le nord-est du pays.
+
+Cette progression s’explique en partie par l’augmentation des températures et l’évolution des conditions climatiques, qui favorisent la survie et la reproduction du moustique dans des régions auparavant moins propices à son développement.
+
 ##  Par site 
 ```{r}
 # Par site 
@@ -158,3 +151,7 @@ ggplot(data = map_data) +
     x = "Longitude", y = "Latitude") +
   coord_sf(xlim = c(-5.5, 10), ylim = c(41, 51.5))
 ```
+
+La carte met en évidence une forte concentration du moustique tigre dans le sud et le sud-est de la France. La région Rhône-Alpes apparaît comme le principal foyer, suivie par Provence-Alpes-Côte d’Azur et Languedoc-Roussillon.
+
+Les régions de l’ouest et du centre présentent également une présence croissante du moustique, tandis que les régions du nord restent relativement peu touchées. Cette répartition reflète l’expansion progressive de l’espèce depuis les zones les plus favorables sur le plan climatique.

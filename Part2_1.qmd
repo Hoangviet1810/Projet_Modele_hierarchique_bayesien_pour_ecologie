@@ -1,32 +1,37 @@
 ---
-title: "Partie 2 Construction du modèle hiérarchique bayésien "
+title: "Partie 2 Construction du modèle hiérarchique bayésien version 1"
 author: "NGUYEN Duc Hoang Viet"
-format:
-  html:
-    theme: cosmo        # Giao diện sạch sẽ, chuyên nghiệp
-    toc: true           # Hiện mục lục bên trái/phải
-    number-sections: true # Tự động đánh số 1, 2, 3...
-    code-fold: false     # Cho phép ẩn/hiện code (rất giống Notebook)
-    embed-resources: true # Để lưu thành 1
+number-sections: true
+code-fold: false
 execute:
   warning: false
   message: false
 ---
 
-
 # Construction du modèle hiérarchique bayésien
-::: {#fig-model}
-![Structure du modèle hiérarchique bayésien](model1.png){width="90%" fig-align="center"}
-:::
 
-Variante : sigma\^2 suit une loi Exponentielle(1)
+Pour l’année $i$ et le site $j$, on note $Y_{i,j}$ le nombre d’occurrences du moustique tigre.
 
-Reparamétrisation : gamma = log(sigma\^2), Z_i = log(lambda_i)
+On propose le modèle hiérarchique suivant :
+
+$$
+Y_{i,j} \mid \lambda_i \sim \text{Poisson}(\lambda_i),
+$$
+
+$$
+\log(\lambda_i) \mid \mu, \sigma^2 \sim \mathcal{N}(\mu, \sigma^2).
+$$
+
+On cherche à estimer $\mu$ et $\sigma^2$, et à prédire les $\lambda_i$.Ces derniers, appelés effets aléatoires, représentent la moyenne (et également la variance) annuelle des occurrences.
+
+Hyperparamètres : $\sigma^2 \sim \text{Exp}(1)$, $\mu \sim \mathcal{N}(0,4)$
+
+Reparamétrisation : $\gamma = \log(\sigma^2)$, $Z_i = \log(\lambda_i)$
 
 Il y a 5 fonction. Ce sont:
 
 -   fonction log_posterior : calculer la log posterior
--   fonction les gradients : calculer les gradients de -log_postierior par les parametres Zi, mu, sigma
+-   fonction les gradients : calculer les gradients de -log_postierior par les parametres $Z_i$, $\mu$, $\gamma$
 -   fonction leapfrog. : calculer les steps pour algo HMC
 -   fonction HMC_step : algo HMC
 -   fonction run_chain : pour faire des chaines en même temps
@@ -50,6 +55,7 @@ tigre_moustique_data <- occ_search(
 
 # ------------------------------------------------------------------------------
 #                   RESUME DES DONNÉES
+# ------------------------------------------------------------------------------
 summary_table <- tigre_moustique_data %>%
   filter(!is.na(year), !is.na(stateProvince)) %>%  
   group_by(year, stateProvince) %>%                 
@@ -84,9 +90,6 @@ I <- nrow(df_annual) # Nombre total d'années d'observation (généralement 12)
 # La fonction de log-posteriori
 
 ```{r}
-# ------------------------------------------------------------------------------
-#                 La fonction log-postérieure 
-# ------------------------------------------------------------------------------
 log_posterior <- function(Z, Y, J, mu, gamma) { 
   sigma2 <- exp(gamma)
   
@@ -356,6 +359,10 @@ ggplot(lp_long, aes(x = Iteration, y = Log_Posterior, color = Chaine)) +
   )
 ```
 
+La figure montre une convergence rapide des cinq chaînes vers une même zone de forte densité. Leur superposition indique un excellent mélange et une exploration efficace de l’espace des paramètres.
+
+La stabilité des trajectoires confirme que la phase de chauffe (*burn-in*) est suffisante et que les estimations postérieures obtenues sont fiables.
+
 ```{r}
 # ---------------------------------------------------------
 #                   Main run 1 chain 
@@ -398,6 +405,10 @@ acf(chaine, main="Avant Burn-In (Chain 1)")
 # 4. Analyse de l'autocorrélation après Burn-in
 acf(chaine_after_burnin, main="Apres Burn-In (Chain 1)")
 ```
+
+L’analyse de la fonction d’autocorrélation (ACF) montre une diminution rapide de la corrélation entre les itérations successives. Après quelques lags, l’autocorrélation devient négligeable, indiquant que les échantillons générés sont quasiment indépendants.
+
+Cette propriété témoigne de l’efficacité de l’algorithme HMC, qui permet une exploration plus rapide de l’espace des paramètres que les méthodes MCMC classiques. De plus, la stabilité observée après la phase de *burn-in* confirme que les échantillons utilisés pour l’inférence proviennent bien d’une distribution stationnaire.
 
 ```{r}
 # Plots
@@ -476,6 +487,10 @@ for (i in 1:n_lambda) {
 par(mfrow=c(1, 1))
 ```
 
+Les distributions postérieures des paramètres $\lambda_1$ à $\lambda_{12}$ montrent une augmentation progressive de l’intensité de présence du moustique tigre au cours du temps. Les estimations passent d’une faible valeur initiale ($\lambda_1 \approx 2,5$) à un niveau beaucoup plus élevé vers l’année 10 ($\lambda_{10} \approx 26,5$), mettant en évidence une forte variabilité inter-annuelle.
+
+Par ailleurs, les distributions deviennent plus concentrées au fil des années, ce qui traduit une diminution de l’incertitude et une amélioration de la précision des estimations grâce à des données plus abondantes.
+
 # Estimateurs ponctuels et des intervalles de confiances pour chaque parametre
 
 ```{r}
@@ -545,6 +560,12 @@ ggplot(results, aes(x = Parameter, y = Estimate)) +
     axis.title = element_text(size = 12)
   )
 ```
+
+Les estimations a posteriori des paramètres $\lambda_i$ montrent une augmentation marquée de l’intensité de présence du moustique tigre au cours du temps. Une transition nette apparaît entre les premières années ($\lambda < 5$) et les années 7 à 10, caractérisées par une forte croissance de l’abondance.
+
+L’année 10 se distingue par une estimation particulièrement élevée ($\hat{\lambda}_{10} \approx 26,6$), influencée par l’observation d’un site ayant enregistré un nombre exceptionnel de moustiques. Malgré cette valeur extrême, le modèle hiérarchique fournit une estimation stable grâce au partage d’information entre les années.
+
+Les intervalles de crédibilité à 95 % permettent d’évaluer l’incertitude des estimations. Les premières années présentent des intervalles plus larges, tandis que les années récentes bénéficient d’estimations plus précises, reflétant la disponibilité de données plus abondantes et une meilleure confiance statistique.
 
 # Analyser la qualité prédictive du modèle.
 
@@ -651,3 +672,9 @@ ppc_plot <- ggplot(ppc_long, aes(x = Valeur)) +
 
 print(ppc_plot)
 ```
+
+Les résultats montrent que le modèle tend à légèrement surestimer le nombre de sites sans moustiques, ce qui suggère une surestimation modérée de la probabilité d’absence. Cette différence peut être liée aux limites de la loi de Poisson pour représenter des données très dispersées.
+
+Par ailleurs, le modèle sous-estime les événements extrêmes. La valeur maximale observée (252 moustiques) est largement supérieure aux valeurs simulées, indiquant qu’un épisode exceptionnel n’est pas entièrement capturé par le modèle.
+
+Malgré cette limite, le modèle reproduit correctement la tendance générale et la variabilité inter-annuelle de l’invasion du moustique tigre.
