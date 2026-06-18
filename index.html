@@ -78,6 +78,24 @@ body.light-mode .nav-links a:hover,body.light-mode .nav-links a.active{color:var
 body.light-mode .grid-bg{background-image:linear-gradient(rgba(0,119,170,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(0,119,170,.05) 1px,transparent 1px)}
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
+
+/* CUSTOM SCROLLBAR — cyan */
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:rgba(0,0,0,.4)}
+::-webkit-scrollbar-thumb{
+  background:linear-gradient(180deg,#00d4ff 0%,rgba(0,212,255,.5) 50%,#f5c542 100%);
+  border-radius:3px;
+  box-shadow:0 0 8px rgba(0,212,255,.6)
+}
+::-webkit-scrollbar-thumb:hover{
+  background:linear-gradient(180deg,#00eeff 0%,#00d4ff 50%,#f5c542 100%);
+  box-shadow:0 0 14px rgba(0,212,255,.9)
+}
+/* Firefox */
+html{scrollbar-width:thin;scrollbar-color:#00d4ff rgba(0,0,0,.4)}
+body.light-mode::-webkit-scrollbar-track{background:rgba(200,220,235,.4)}
+body.light-mode::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#0077aa 0%,rgba(0,119,170,.5) 50%,#b07d08 100%)}
+
 body{background:var(--bg);color:var(--tx);font-family:'Inter',sans-serif;overflow-x:hidden;cursor:crosshair;transition:background .4s,color .4s}
 body::before{content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,212,255,.012) 2px,rgba(0,212,255,.012) 4px)}
 body.light-mode::before{background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,136,187,.008) 2px,rgba(0,136,187,.008) 4px)}
@@ -365,14 +383,13 @@ nav::after{content:'';position:absolute;bottom:0;left:8%;right:8%;height:1px;bac
 
 /* INTRO OVERLAY */
 #intro-overlay{
-  position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;
+  position:fixed;top:0;left:0;width:100%;
   z-index:99999;background:#000;
   display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:28px;transition:opacity .8s ease;
-  min-height:100vh;min-height:-webkit-fill-available;
+  gap:28px;
+  transition:opacity .5s ease;
   overflow:hidden
 }
-#intro-overlay{transition:opacity .5s ease}
 #intro-overlay.fade-out{opacity:0;pointer-events:none}
 #intro-overlay.hidden{display:none}
 
@@ -773,6 +790,12 @@ document.querySelectorAll('[data-reveal]').forEach(el => obs.observe(el));
 // INTRO OVERLAY
 (function(){
   const overlay = document.getElementById('intro-overlay');
+  // Fix iOS Safari: set real screen height via JS
+  function setOverlayHeight(){
+    overlay.style.height = window.innerHeight + 'px';
+  }
+  setOverlayHeight();
+  window.addEventListener('resize', setOverlayHeight);
   document.body.style.overflow = 'hidden';
   setTimeout(() => {
     overlay.classList.add('fade-out');
